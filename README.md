@@ -79,4 +79,6 @@ npm run test:e2e
 
 本版本发布范围为 GitHub `main` 源码与开发验证记录，详见 [发布记录](docs/release.md)。没有部署公开生产网站。云配置草稿保存、发布快照和新任务恢复是不同步骤；新任务恢复尚未独立验证。
 
+用户另指定 `https://nexa-mk.voltwok.com/` 作为私有 DEMO 域名。访问保护和变量示例已准备；实际域名部署仍待托管平台/服务器、DNS 权限及有效网络访问。详见 [域名部署状态](docs/domain-deployment.md)。默认 standalone Next 启动需要 private_demo 的 origin/登录配置；本地开发请使用 scripts/dev.py up，其显式 local 模式仅绑定 loopback。
+
 删除账户会清除其联系/研究资料；为防止重新导入绕过退订，最小商业身份哈希抑制键单独保留，不保存原始姓名、邮箱或电话。真实运行前须确认该 opt-out 保留用途与期限。

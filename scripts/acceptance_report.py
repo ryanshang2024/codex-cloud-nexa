@@ -32,6 +32,11 @@ def main():
             'calls_reserved':p.get('requests_used',0)} for p in data['source_policies']],
         'development_checks':{'backend':checks,'browser':browser,'health':health.json()},
         'production_acceptance':'unrun'}
+    deployment=ROOT/'.local/deployment-browser-results.json'
+    if deployment.exists():
+        report['development_checks']['private_domain_access']={
+            'stats':json.loads(deployment.read_text())['stats'],
+            'scope':'loopback production-build servers with target-domain Host headers and TEST_ONLY login; real DNS/TLS/deployment unverified'}
     before=ROOT/'.local/acceptance-round2-before.xml'
     if before.exists():
         report['acceptance_round2']={'baseline_commit':'cf7f359a5accb67490b7767f97eacba2fe4ab3a8',

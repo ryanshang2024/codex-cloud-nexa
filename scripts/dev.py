@@ -141,8 +141,12 @@ def up():
             if owned_process(int(pidfile.read_text()),name):
                 continue
         log=open(LOCAL/(name+'.log'),'ab')
+        process_env=os.environ.copy()
+        if name=='frontend':
+            # This launcher always binds loopback; public releases use private_demo.
+            process_env.setdefault('NEXA_WORKSPACE_MODE','local')
         proc=subprocess.Popen(args,cwd=ROOT/'frontend' if name=='frontend' else ROOT,
-            stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            env=process_env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
         pidfile.write_text(str(proc.pid))
     import httpx
     for port,path in [(8000,'/health'),(3000,'/')]:

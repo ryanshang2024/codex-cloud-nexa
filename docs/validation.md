@@ -65,3 +65,9 @@ Lead-Researcher 固定提交源码审查完成，缺独立 LICENSE，因此未�
 浏览器先复现审批提示不在弹窗，再用截图及 `toBeInViewport` 复现长草稿列表使提示不可见。现在提示使用中文、出现在弹窗内、失败时滚回可视位置；联系依据审批标签与草稿审批分开。完整浏览器 **4 passed / 0 unexpected / 0 flaky**，生产构建/TypeScript、服务重启、QC FR / ON EN 演示均通过；时间戳见 [acceptance-evidence.json](acceptance-evidence.json)。
 
 [审批错误截图](previews/workspace-approval-error.png)使用控制的 409 响应展示已通过后端回归检查的失效引用情形。截图、浏览器和供应商故障响应均不能计为真实来源或真实客户证据。发送仍 HTTP 423，用户评分保持 0/100，正式业务验收待真实样本与完整能力验证。
+
+## 域名发布准备检查
+
+新增 Next Proxy 标准 HTTP Basic 保护，默认 private_demo 未配置凭据时拒绝访问；域名规范化、公开同源检查及本地显式 local 启动模式已验证。部署访问检查在改动前 4 failed / 1 passed，改动后 **5 passed**；全部 PostgreSQL **124 passed**、本地浏览器 **4 passed**，生产构建/TypeScript、保留数据的服务重启与 DEMO 通过。没有实际外部 API 或营销发送。
+
+这些是本地构建的 HTTP/Host/认证检查，不是域名 HTTPS 验收。目标站点访问被当前代理 CONNECT 403 拦截；DNS、证书及远端运行版本未取得证据，托管/DNS 身份未配置。[实际部署](domain-deployment.md)保持待执行，网络草稿保存后还需要环境设置的审核、保存和发布才能应用。

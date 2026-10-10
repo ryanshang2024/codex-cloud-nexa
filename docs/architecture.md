@@ -46,3 +46,5 @@ flowchart LR
 ## 第一阶段边界与外部前提
 
 本期必须交付运行中的 API、数据库、工作台、可恢复 DEMO 研究与完整人工审批/CRM 闭环。真实连接需：来源合同/条款审查、供应商凭据、NEXA 真实产品与合作政策、QC/ON 资质类别规则、联系人合法依据。50 家真实公开企业复核是上线 gate；DEMO 测试不能代替它。来源条款未核验、未知资质与虚构 DEMO 不能标成真实可联系客户。
+
+用户后续指定 nexa-mk.voltwok.com，新增范围为私有 DEMO 域名发布。Next Proxy 用标准 HTTP Basic 保护页面/资源/BFF，默认缺配置关闭访问；BFF 的服务器 token 仅连接隔离 DEMO 租户，不替代生产 per-user OIDC/RBAC。域名、源站、DNS 与可信 HTTPS 需在实际选定托管平台部署后验证，当前状态见 docs/domain-deployment.md，不能将本地 Host 头检查等同线上验收。

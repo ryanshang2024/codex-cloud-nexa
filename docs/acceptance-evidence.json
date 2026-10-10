@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-10T18:47:32.672245+00:00",
+  "generated_at": "2026-10-10T19:21:28.745588+00:00",
   "score_status": "user_reported_baseline_unchanged_pending_independent_acceptance",
   "categories": [
     {
@@ -91,12 +91,12 @@
         "failures": "0",
         "errors": "0",
         "skipped": "0",
-        "timestamp": "2026-10-10T18:41:23.913210+00:00"
+        "timestamp": "2026-10-10T19:12:09.006202+00:00"
       }
     ],
     "browser": {
-      "startTime": "2026-10-10T18:47:07.171Z",
-      "duration": 7414.081999999999,
+      "startTime": "2026-10-10T19:20:23.804Z",
+      "duration": 7153.561,
       "expected": 4,
       "skipped": 0,
       "unexpected": 0,
@@ -107,6 +107,17 @@
       "database": "postgresql",
       "auto_send": false,
       "version": "3.2.0"
+    },
+    "private_domain_access": {
+      "stats": {
+        "startTime": "2026-10-10T19:18:01.447Z",
+        "duration": 2683.558,
+        "expected": 5,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "scope": "loopback production-build servers with target-domain Host headers and TEST_ONLY login; real DNS/TLS/deployment unverified"
     }
   },
   "production_acceptance": "unrun",
