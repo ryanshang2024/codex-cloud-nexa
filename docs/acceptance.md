@@ -4,12 +4,13 @@
 
 - FR01：10 个画像两省配置可读/可改，H10 不入漏斗；企业与 owner_operator 权重之和均为 100。
 - FR01/05/07：指定画像的服务能力、市场类型、经营模式均有已核验证据；未知采购权不能靠高 Fit 绕过；负面或类别不一致的资质证明不能标 verified；证据到期时列表状态与实时资格保持一致。
-- FR02/03：未授权 provider 不调用；来源失败回退；暂停/继续、幂等建 job、逐项 checkpoint、进程重启租约恢复；最多三次重试；预算和结果上限执行。
+- FR02/03：未授权 provider 不调用；路由后授权撤销/用途变化/价格变化在预算预留事务中复核；来源失败回退；暂停/继续、幂等建 job（同键异请求 409）、逐项 checkpoint、进程重启租约恢复；最多三次重试；预算和结果上限执行。
 - FR04：同租户域名/注册号重复合并并保留新证据；不同租户不合并；Contact 与 Account 分离。
 - FR05/06：Unknown、过期、错省份、未授权社媒及非商业档案不能产生合格真实客户；资质类别与省份匹配，未证实不推断。
 - FR07：每项评分可解释，未核验证据不加分；Intent 只用有效事件，Google rating 不产生 Intent；覆盖有理由和审计，硬条件不可覆盖。
 - FR08/09：QC 法语、ON 英语；未知事实为 null；模型声明不在 allowlist 被拒；联系人合法依据需合规人审；草稿 revision 变动审批失效；全部发送请求拒绝；DNC 立即阻断现有草稿。
-- FR10：退订优先，PRICE_REQUEST / PROJECT_AVAILABLE / INSTALLER_APPLICATION / TECHNICAL_QUESTION / NOT_NOW / OTHER 有对应任务，人审价格/项目/技术承诺/合同；商机阶段受控。
+- FR10：明确英文/法文退订优先，PRICE_REQUEST / PROJECT_AVAILABLE / INSTALLER_APPLICATION / TECHNICAL_QUESTION / NOT_NOW / OTHER 有对应任务，人审价格/项目/技术承诺/合同；回复须同正文的 reply 证据与有效来源用途，冲突 external_id 409；商机阶段受控，伙伴 activated 须有已审且已发生的首个合作动作。
+- FR08/09 审批复验：资格合格不替代当前草稿版本的引用核验；到期/撤回/失去 outreach 用途的引用不能获批。更新证据、重新渲染 revision 后才能批准。审批错误必须在弹窗可视区域展示可理解提示。
 - FR11/12：导出包括来源、日期、许可、核验、DEMO 标识；阻断 provider-only/禁导出证据；防 CSV formula；漏斗不混真实/DEMO，不存在的发送指标为 null。
 - 数据库/API：未认证 401、错误角色 403、跨租户 404/无数据，强制 RLS 与复合外键；HMAC webhook 错签名/过期/重放拒绝；删除可识别字段并留下不含原始个人资料的审计。
 - 浏览器演示：创建 DEMO job → 研究 → 查看证据/评分 → 双语草稿 → 合规审批/销售审批 → 模拟回复 → CRM；UI 失败必须展示错误。

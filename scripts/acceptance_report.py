@@ -32,6 +32,16 @@ def main():
             'calls_reserved':p.get('requests_used',0)} for p in data['source_policies']],
         'development_checks':{'backend':checks,'browser':browser,'health':health.json()},
         'production_acceptance':'unrun'}
+    before=ROOT/'.local/acceptance-round2-before.xml'
+    if before.exists():
+        report['acceptance_round2']={'baseline_commit':'cf7f359a5accb67490b7767f97eacba2fe4ab3a8',
+            'pre_fix_backend_checks':[{k:s.attrib[k] for k in ['tests','failures','errors','skipped','timestamp']}
+                for s in ET.parse(before).getroot()],
+            'data_scope':'isolated TEST/DEMO fixtures and controlled provider responses; no real business accuracy claim',
+            'new_backend_cases':39,
+            'reviewed_boundaries':['EN/FR opt-outs','inbound evidence and current authorization',
+                'reply and job idempotency conflicts','exact draft citation approval','completed partner cooperation',
+                'policy and price recheck before call','visible modal approval errors']}
     target=ROOT/'docs/acceptance-evidence.json'
     target.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps({'report':str(target),'real_accounts':len(real_accounts),

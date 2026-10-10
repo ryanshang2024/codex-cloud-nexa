@@ -108,6 +108,7 @@ def test_bilingual_approval_contact_basis_send_lock_revision(env,seed,province,l
     assert post(env,'drafts/'+draft['id']+'/send',{}).status_code==423
     edit=env['client'].patch('/api/drafts/'+draft['id'],headers=env['headers']['sales'],json={'revision':1,'language':'en' if language=='fr' else 'fr'})
     assert edit.status_code==200 and edit.json()['status']=='draft' and edit.json()['approved_by'] is None
+    assert edit.json()['approved_revision'] is None
     assert post(env,'drafts/'+draft['id']+'/approve',review).status_code==409
 
 

@@ -53,14 +53,14 @@ npm run test:e2e
 | 能力 | 入口 | 本期状态 |
 |---|---|---|
 | ICP / Source Router | profiles PATCH、router GET、policies PUT | 10画像、省份关键词、许可/凭据过滤和备用来源 |
-| Research | jobs POST、pause/resume/step、job detail | Postgres lease/checkpoint、幂等键、结果/调用/费用限额、有限重试 |
+| Research | jobs POST、pause/resume/step、job detail | Postgres lease/checkpoint、同键异请求 409、结果/调用/费用限额、调用前授权与当前费用复查 |
 | 企业发现 | accounts POST、授权目录/inbound import、Places | 支持规范化待核验导入；Places 仅 Place ID，不将 Maps 内容复制到 CRM |
 | 官网丰富化 | Firecrawl `/v2/scrape` adapter | 固定 API、允许 URL、公共 DNS、重定向最终来源校验；原文待人审 |
 | 商业社媒 | Apify reviewed dataset adapter | dataset allowlist + 商业内容过滤；不启动 Actor，不抓私人档案 |
 | 资质/评分 | evidence/review、credentials、score/override | Unknown 明确、QC/ON与工作类别、两套 Fit、独立 Intent，人审有审计 |
-| 草稿 | drafts POST/PATCH/approve | FR/EN、精确 revision、证据变化审批失效；无产品输入不生成产品声明 |
+| 草稿 | drafts POST/PATCH/approve | FR/EN、精确 revision 和当前引用/用途核验、证据变化审批失效；无产品输入不生成产品声明 |
 | AI | OpenAI Responses 结构化建议 | 仅模板/已审证据 ID；真实 API 未测试且默认关闭；正文有界渲染 |
-| 回复/CRM | replies POST、opportunities/tasks/partners PATCH | 规则分类，报价/项目/技术/合同人审；退订立即抑制 |
+| 回复/CRM | replies POST、opportunities/tasks/partners PATCH | reply 证据与用途授权、规则分类、冲突事件 409、完成合作证明；明确 EN/FR 退订立即抑制 |
 | 导出/隐私 | export GET、accounts DELETE、audit GET | 仅经允许的已核验主体、CSV防公式、来源时间许可、个人资料级联删除 |
 | 标准 Agent 输出 | account agent-result GET | 结构化结果、引用、排除、不确定事实与 next_actions |
 | n8n | webhooks/n8n POST | bearer + HMAC + 5分钟时间窗 + replay rejection，接 ResearchJob；外部模板未导入 |

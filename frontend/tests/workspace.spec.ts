@@ -17,6 +17,7 @@ test('DEMO research → evidence → consent review → bilingual draft → appr
  await modal.getByRole('button',{name:'提交 DEMO 联系依据'}).click();
  await expect(modal.getByRole('button',{name:'合规人审通过'}).last()).toBeVisible();
  await modal.getByRole('button',{name:'合规人审通过'}).last().click();
+ await expect(modal.getByText('联系依据已审批',{exact:true}).last()).toBeVisible();
  await modal.getByRole('button',{name:'生成 英语 草稿'}).click();
  await expect(modal.getByText('A conversation about your HVAC services').last()).toBeVisible();
  await modal.getByRole('button',{name:'人工审批此版本'}).last().click();
@@ -58,4 +59,20 @@ test('workspace rejects cross-origin writes',async({request})=>{
  const response=await request.post('/api/jobs',{headers:{Origin:'https://untrusted.example'},data:{province:'QC',profile:'H01',mode:'demo',idempotency_key:'csrf-blocked'}});
  expect(response.status()).toBe(403);
  expect((await response.json()).detail).toBe('Cross-origin request rejected');
+});
+
+test('blocked draft review explains the evidence problem inside the open dialog',async({page})=>{
+ await page.route('**/api/drafts/*/approve',route=>route.fulfill({status:409,contentType:'application/json',
+  body:JSON.stringify({detail:{blocked_by:['draft_citations_invalid']}})}));
+ await page.goto('/');
+ await expect(page.getByText('正在连接工作台…',{exact:true})).toHaveCount(0);
+ await page.getByRole('navigation').getByRole('button',{name:'客户研究'}).click();
+ await page.getByRole('button',{name:'DEMO ON H06 HVAC 1',exact:true}).click();
+ const modal=page.getByRole('dialog');
+ await modal.getByRole('button',{name:'草稿与审批',exact:true}).click();
+ await modal.getByRole('button',{name:'人工审批此版本'}).last().click();
+ await expect(modal.getByRole('alert')).toContainText('引用证据已失效');
+ await expect(modal.getByRole('alert')).toContainText('重新生成草稿');
+ await expect(modal.getByRole('alert')).toBeInViewport();
+ await modal.screenshot({path:'../.local/workspace-approval-error.png'});
 });

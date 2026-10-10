@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import time
 from datetime import timedelta
 
@@ -11,9 +13,24 @@ from .providers import Providers, demo_candidate, policy_ready, route
 
 
 def create_job(db, value):
+    # Pydantic defaults may retain integer 1 while an explicit budget is float 1.0.
+    # Normalize the typed request so equivalent retry bodies share a fingerprint.
+    value={**value,'cost_budget':float(value['cost_budget'])}
     db.conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))', (db.tenant_id + ':job:' + value['idempotency_key'],))
     old = db.list('search_jobs', idempotency_key=value['idempotency_key'])
+    request_hash=hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest()
     if old:
+        existing=old[0]
+        previous_hash=existing.get('request_hash')
+        if previous_hash is None:
+            # Compatibility with jobs created before request hashes were recorded.
+            previous={k:existing.get(k) for k in value if k!='items'}
+            previous['items']=[] if existing['mode']=='demo' else [i['payload'] for i in
+                sorted(db.list('job_items',job_id=existing['id']),key=lambda i:i['ordinal'])]
+            previous['cost_budget']=float(previous['cost_budget'])
+            previous_hash=hashlib.sha256(json.dumps(previous,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+        if previous_hash!=request_hash:
+            fail('Idempotency key already belongs to a different search request')
         return old[0]
     items = value.get('items', [])
     if value['mode'] == 'demo':
@@ -23,7 +40,7 @@ def create_job(db, value):
         items = [{'candidate': demo_candidate(value['province'], value['profile'], i)} for i in range(3)]
     if not items or len(items) > min(200, value['max_results']):
         fail('Job requires 1–200 items within max_results', 422)
-    data = {**value, 'items': None, 'status': 'queued', 'cursor': 0, 'calls_used': 0,
+    data = {**value, 'request_hash':request_hash, 'items': None, 'status': 'queued', 'cursor': 0, 'calls_used': 0,
             'lease_until': None, 'next_attempt_at': None, 'results_count': 0}
     job = db.put('search_jobs', data)
     for i, item in enumerate(items):
@@ -93,13 +110,16 @@ def process_one(tenant_id, job_id=None, providers=None):
         client = providers or Providers()
         try:
             for p in available:
-                cost = p.get('cost_per_call', 0)
                 # Persist budget before side effect; lost response still consumes a call.
                 with transaction(tenant_id, 'worker') as db:
                     current = require(db, 'search_jobs', job['id'], lock=True)
                     policy = require(db, 'source_policies', p['id'], lock=True)
                     if current['status'] == 'paused':
                         return {'id': job['id'], 'status': 'paused'}
+                    if not policy_ready(policy,payload.get('purpose','discovery')):
+                        attempts.append((p['provider'],'policy_revoked','policy_no_longer_authorized',0))
+                        error='no_authorized_source'; continue
+                    cost=policy.get('cost_per_call',0)
                     if current['calls_used'] >= current['call_budget'] or current.get('cost_used', 0) + cost > current['cost_budget']:
                         error = 'budget_exhausted'; break
                     if policy.get('requests_used', 0) >= policy['request_limit']:
@@ -112,7 +132,7 @@ def process_one(tenant_id, job_id=None, providers=None):
                         'next_call_at': (utcnow() + timedelta(seconds=60/policy['requests_per_minute'])).isoformat()})
                 used += 1
                 try:
-                    result = client.call(p['provider'], p, payload)
+                    result = client.call(p['provider'], policy, payload)
                     attempts.append((p['provider'], 'success', None, cost))
                     break
                 except Exception as exc:

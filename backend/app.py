@@ -345,7 +345,8 @@ def draft_edit(identifier:str,value:s.DraftEdit,who=Depends(identity)):
             fail('Do not contact')
         facts,_=evidence_map(db,a,'outreach')
         row=db.put('outreach_drafts',{**d,**render_draft(a,value.language,facts),'language':value.language,
-            'revision':d['revision']+1,'status':'draft','approved_by':None})
+            'revision':d['revision']+1,'status':'draft','approved_by':None,'approved_revision':None,
+            'ai_suggestion':None,'context_hash':fingerprint(db,a,require(db,'contacts',d['contact_id']))})
         db.audit('draft_revision_changed',identifier)
         return row
 
@@ -359,6 +360,15 @@ def draft_approve(identifier:str,value:s.DraftApprove,who=Depends(identity)):
         if d['revision']!=value.revision:
             fail('Stale draft revision')
         reasons=contact_gate(db,a,c)
+        # Qualification may use different evidence. Review the exact citations in this revision.
+        citations=[db.get('evidence',identifier2) for identifier2 in d.get('evidence_ids',[])]
+        if (d.get('template_id')!='partnership_intro' or not citations
+                or any(not e or e['account_id']!=a['id'] or e['fact_type']!='product_match'
+                       or e.get('value') is not True or not allowed_evidence(db,e,a,'outreach') for e in citations)):
+            reasons.append('draft_citations_invalid')
+        _,conflicts=evidence_map(db,a,'outreach')
+        if 'product_match' in conflicts:
+            reasons.append('draft_citations_conflicting')
         if value.approved and reasons:
             fail({'blocked_by':reasons})
         # Refresh context only after all gates were re-evaluated by the human reviewer.
@@ -454,10 +464,16 @@ def partner_change(identifier:str,value:s.PartnerInput,who=Depends(identity)):
                 fail('Partner requires qualification and human-reviewed documents')
             for identifier2 in value.evidence_ids:
                 e=require(db,'evidence',identifier2)
-                if e['account_id']!=a['id'] or not usable(e,'score',a['is_demo']):
+                if e['account_id']!=a['id'] or not allowed_evidence(db,e,a,'score'):
                     fail('Partner evidence is not reviewed')
-            if value.state=='activated' and value.first_action_evidence_id not in value.evidence_ids:
-                fail('Activation requires evidence of the first real cooperation action')
+            if value.state=='activated':
+                if value.first_action_evidence_id not in value.evidence_ids:
+                    fail('Activation requires evidence of the first real cooperation action')
+                action=require(db,'evidence',value.first_action_evidence_id)
+                if (action['fact_type']!='first_cooperation' or action.get('value') is not True
+                        or not action.get('event_date') or date(action['event_date'])>utcnow()
+                        or date(action['event_date'])>date(action['observed_at'])):
+                    fail('Activation requires a reviewed, dated and completed first cooperation action')
         row=db.put('partners',{**p,**value.model_dump(),'reviewer_id':who['user_id']})
         db.audit('partner_state_changed',p['id'],value.reason)
         return row

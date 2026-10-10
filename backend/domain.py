@@ -324,9 +324,18 @@ def render_draft(account, language, facts):
 
 
 def classify_reply(text):
-    text = text.casefold()
+    text = text.casefold().replace('’', "'").replace('‘', "'")
+    opt_out = (
+        r'\bunsubscribe\b|\bremove (?:me|us)\b|\bdo not contact\b|\bstop contacting\b|^\s*stop[.!]?\s*$'
+        r"|\b(?:stop|do not|don't)\s+(?:email(?:ing)?|messag(?:e|ing)|contact(?:ing)?)\s+(?:me|us)\b"
+        r"|\b(?:stop|do not|don't)\s+send(?:ing)?\s+(?:(?:me|us|any|more|further)\s+)*(?:emails?|messages?)\b"
+        r'|désabonn|désinscri|ne me contactez|retirez.moi'
+        r"|\bne\s+(?:m'|nous\s+)(?:écrivez|ecrivez|envoyez|contactez)\s+plus\b"
+        r"|\b(?:cesser|cessez|arrêtez|arretez)\s+de\s+(?:m'|nous\s+|me\s+)?(?:contacter|écrire|ecrire|envoyer)\b"
+        r'|退订|拒绝联系'
+    )
     rules = [
-        ('UNSUBSCRIBE', r'unsubscribe|remove me|do not contact|stop contacting|^\s*stop[.!]?\s*$|désabonn|désinscri|ne me contactez|retirez.moi|arrêtez|退订|拒绝联系'),
+        ('UNSUBSCRIBE', opt_out),
         ('PRICE_REQUEST', r'price|pricing|quote|prix|tarif|devis|报价|价格'),
         ('INSTALLER_APPLICATION', r'join|installer application|become.*partner|partenaire|inscription|入驻'),
         ('PROJECT_AVAILABLE', r'project|installation project|projet|chantier|项目'),
@@ -340,16 +349,17 @@ def ingest_reply(db, account_id, external_id, text, evidence_id):
     account = require(db, 'accounts', account_id, lock=True)
     prior = db.list('interactions', external_id=external_id)
     if prior:
-        if prior[0]['account_id'] != account_id:
+        if prior[0]['account_id'] != account_id or prior[0]['text'] != text:
             fail('External reply identity conflict')
         return prior[0]
     ev = require(db, 'evidence', evidence_id)
-    if ev['account_id'] != account_id or ev.get('value') != text or not usable(ev, 'reply', account['is_demo']):
+    if (ev['account_id'] != account_id or ev['fact_type'] != 'reply' or ev.get('value') != text
+            or not allowed_evidence(db, ev, account, 'reply')):
         fail('Reply requires reviewed inbound evidence')
     category = classify_reply(text)
     interaction = db.put('interactions', {'account_id': account_id, 'external_id': external_id,
                                          'category': category, 'text': text, 'evidence_id': evidence_id,
-                                         'classification': 'rules_v1', 'requires_human': True})
+                                         'classification': 'rules_v2', 'requires_human': True})
     if category == 'UNSUBSCRIBE':
         suppress(db, account_id, 'inbound_unsubscribe')
     else:

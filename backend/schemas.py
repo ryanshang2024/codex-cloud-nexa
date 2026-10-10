@@ -116,7 +116,7 @@ class PolicyInput(Input):
     enabled: bool = False
     terms_url: str = Field(pattern=r'^https://')
     provenance_license: str = Field(min_length=1)
-    purposes: list[Literal['discovery','enrichment','score','outreach','export','draft']]
+    purposes: list[Literal['discovery','enrichment','score','outreach','export','draft','reply']]
     expires_at: datetime
     request_limit: int = Field(ge=1, le=10000)
     requests_per_minute: int = Field(ge=1, le=120)

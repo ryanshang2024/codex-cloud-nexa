@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-10T18:27:41.035903+00:00",
+  "generated_at": "2026-10-10T18:47:32.672245+00:00",
   "score_status": "user_reported_baseline_unchanged_pending_independent_acceptance",
   "categories": [
     {
@@ -87,17 +87,17 @@
   "development_checks": {
     "backend": [
       {
-        "tests": "85",
+        "tests": "124",
         "failures": "0",
         "errors": "0",
         "skipped": "0",
-        "timestamp": "2026-10-10T18:25:23.364646+00:00"
+        "timestamp": "2026-10-10T18:41:23.913210+00:00"
       }
     ],
     "browser": {
-      "startTime": "2026-10-10T18:26:40.874Z",
-      "duration": 5198.84,
-      "expected": 3,
+      "startTime": "2026-10-10T18:47:07.171Z",
+      "duration": 7414.081999999999,
+      "expected": 4,
       "skipped": 0,
       "unexpected": 0,
       "flaky": 0
@@ -109,5 +109,28 @@
       "version": "3.2.0"
     }
   },
-  "production_acceptance": "unrun"
+  "production_acceptance": "unrun",
+  "acceptance_round2": {
+    "baseline_commit": "cf7f359a5accb67490b7767f97eacba2fe4ab3a8",
+    "pre_fix_backend_checks": [
+      {
+        "tests": "29",
+        "failures": "27",
+        "errors": "0",
+        "skipped": "0",
+        "timestamp": "2026-10-10T18:37:05.017593+00:00"
+      }
+    ],
+    "data_scope": "isolated TEST/DEMO fixtures and controlled provider responses; no real business accuracy claim",
+    "new_backend_cases": 39,
+    "reviewed_boundaries": [
+      "EN/FR opt-outs",
+      "inbound evidence and current authorization",
+      "reply and job idempotency conflicts",
+      "exact draft citation approval",
+      "completed partner cooperation",
+      "policy and price recheck before call",
+      "visible modal approval errors"
+    ]
+  }
 }
