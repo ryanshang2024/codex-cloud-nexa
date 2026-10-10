@@ -1,0 +1,113 @@
+{
+  "generated_at": "2026-10-10T18:27:41.035903+00:00",
+  "score_status": "user_reported_baseline_unchanged_pending_independent_acceptance",
+  "categories": [
+    {
+      "name": "ICP 客户画像精准度",
+      "maximum": 25,
+      "user_reported_score": 0,
+      "regraded_score": null
+    },
+    {
+      "name": "多渠道获客及数据质量",
+      "maximum": 20,
+      "user_reported_score": 0,
+      "regraded_score": null
+    },
+    {
+      "name": "AI 研究与商机评分",
+      "maximum": 15,
+      "user_reported_score": 0,
+      "regraded_score": null
+    },
+    {
+      "name": "触达与回复工作流",
+      "maximum": 15,
+      "user_reported_score": 0,
+      "regraded_score": null
+    },
+    {
+      "name": "工程质量与系统稳定性",
+      "maximum": 15,
+      "user_reported_score": 0,
+      "regraded_score": null
+    },
+    {
+      "name": "安全与合规",
+      "maximum": 10,
+      "user_reported_score": 0,
+      "regraded_score": null
+    }
+  ],
+  "user_reported_total": 0,
+  "regraded_total": null,
+  "real_accounts": 0,
+  "independent_labelled_sample_count": null,
+  "icp_precision": null,
+  "data_accuracy": null,
+  "ai_grounded_research_accuracy": null,
+  "unmeasured_reason": "No independently reviewed real QC/ON acceptance dataset has been provided; DEMO and test fixtures cannot establish business accuracy.",
+  "source_policies": [
+    {
+      "provider": "google_places_api",
+      "enabled": false,
+      "calls_reserved": 0
+    },
+    {
+      "provider": "government_registry",
+      "enabled": false,
+      "calls_reserved": 0
+    },
+    {
+      "provider": "business_website",
+      "enabled": false,
+      "calls_reserved": 0
+    },
+    {
+      "provider": "licensed_business_directory",
+      "enabled": false,
+      "calls_reserved": 0
+    },
+    {
+      "provider": "authorized_social_api",
+      "enabled": false,
+      "calls_reserved": 0
+    },
+    {
+      "provider": "inbound_forms",
+      "enabled": false,
+      "calls_reserved": 0
+    },
+    {
+      "provider": "openai",
+      "enabled": false,
+      "calls_reserved": 0
+    }
+  ],
+  "development_checks": {
+    "backend": [
+      {
+        "tests": "85",
+        "failures": "0",
+        "errors": "0",
+        "skipped": "0",
+        "timestamp": "2026-10-10T18:25:23.364646+00:00"
+      }
+    ],
+    "browser": {
+      "startTime": "2026-10-10T18:26:40.874Z",
+      "duration": 5198.84,
+      "expected": 3,
+      "skipped": 0,
+      "unexpected": 0,
+      "flaky": 0
+    },
+    "health": {
+      "status": "ok",
+      "database": "postgresql",
+      "auto_send": false,
+      "version": "3.2.0"
+    }
+  },
+  "production_acceptance": "unrun"
+}

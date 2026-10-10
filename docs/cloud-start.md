@@ -1,0 +1,20 @@
+# Start the NEXA HVAC MVP
+Use the existing isolated checkout at /workspace/codex-cloud-nexa. Do not create a Git worktree unless the user explicitly requests one.
+Read AGENTS.md, docs/architecture.md, docs/acceptance.md, docs/agent-workflow.md, and the relevant project .agents/skills/*/SKILL.md.
+
+Retained files: .venv, locked dependencies, frontend/node_modules and .next, and ignored .local/runtime.json, tokens.json, postgres.env and pgdata. Credentials are local/private; never print values or dump these files. Do not assume containers, API, worker, frontend processes or PID records survived publication.
+
+Start from /workspace/codex-cloud-nexa:
+1. Confirm Python 3.12, Node >=20.9 and the provided Docker daemon are usable. Use .venv/bin/python for application code.
+2. If dependencies/build outputs are missing, run bash scripts/install.sh. It uses hash-checked Python wheels, npm ci --ignore-scripts, and a reviewed PostgreSQL image fixed by digest. Preserve application code, tests, dependency declarations, lockfiles and existing local files during setup.
+3. Run .venv/bin/python scripts/dev.py up. This starts/reuses the project-owned PostgreSQL container, applies versioned migrations with a separate owner, and starts API, durable research worker and Next.js with readiness checks. Services bind only to loopback: API 8000, UI 3000, database 54329. Process records verify command, process group and creation timestamp; never stop unrelated processes.
+4. Verify GET http://127.0.0.1:8000/health returns status=ok, database=postgresql, auto_send=false. Verify the Next.js server-side dashboard internally through GET http://127.0.0.1:3000/api/dashboard and confirm ten icp_profiles and auto_send=false. Use internal HTTP checks; do not create localhost preview links.
+5. For a functional DEMO validation, run .venv/bin/python scripts/demo.py. This is explicitly a fictional fixture and simulated human-review workflow; it never calls real providers or sends messages. Do not reset a suppression or user-modified DEMO account merely to make the demo pass. See README for choosing a separate DEMO tenant if necessary.
+
+Relevant checks: .venv/bin/python -m pytest -q; in frontend run npm run typecheck, npm run build and npm run test:e2e using existing /usr/bin/chromium. Run shared-DEMO mutations sequentially. Stop/restart only these project services with scripts/dev.py down / up when necessary.
+
+First-stage marketing delivery is permanently disabled, including after draft approval. H10 is excluded; QC defaults FR, ON EN; Unknown remains null; DNC suppression cannot be erased by deleting and rediscovering a business. Real research/drafts/exports need independently reviewed evidence, provincial credential scope, source rights and human contact-basis review. Do not turn DEMO facts into real leads.
+
+All real sources, including OpenAI, default disabled. Optional user-provided proxy bindings: GOOGLE_PLACES_API_KEY -> places.googleapis.com; FIRECRAWL_API_KEY -> api.firecrawl.dev; APIFY_API_TOKEN -> api.apify.com; NEXA_OPENAI_API_KEY -> api.openai.com. Before requesting values, inspect binding names/presence and test the required authorized operation; never ask for values in chat. OpenAI additionally needs NEXA_AI_ENABLED=true and a reviewed openai SourcePolicy with purpose draft, expiry, total quota and rate limit. Reserve model/provider quota before calls. Apify only reads reviewed business datasets and never starts arbitrary Actors. Do not execute unreviewed external installers or scraping scripts.
+
+Reference pages on n8n.io, academy.openai.com, developers.google.com and developers.openai.com were blocked by the running proxy during implementation. Network domain additions are saved only in the draft until applied/published; recheck after a meaningful configuration change. Their workflow JSON/current terms, live paid API calls, production OIDC and the 50-real-company QC/ON pilot remain unverified. Follow docs/reference-audit.md and docs/acceptance.md before real integration.

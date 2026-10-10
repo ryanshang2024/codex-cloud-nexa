@@ -1,0 +1,192 @@
+{
+  "version": "3.2",
+  "market": [
+    "QC",
+    "ON"
+  ],
+  "industry": "HVAC",
+  "sources": [
+    "licensed_business_directory",
+    "government_registry",
+    "business_website",
+    "google_places_api",
+    "authorized_social_api",
+    "inbound_forms"
+  ],
+  "profiles": {
+    "H01": {
+      "name": "residential_heat_pump_company",
+      "entity_type": "business",
+      "keywords": {
+        "QC": [
+          "installation thermopompe"
+        ],
+        "ON": [
+          "heat pump installation company"
+        ]
+      },
+      "discovery_allowed": true
+    },
+    "H02": {
+      "name": "heating_cooling_company",
+      "entity_type": "business",
+      "keywords": {
+        "QC": [
+          "chauffage climatisation"
+        ],
+        "ON": [
+          "heating and cooling company"
+        ]
+      },
+      "discovery_allowed": true
+    },
+    "H03": {
+      "name": "dealer_installer",
+      "entity_type": "business",
+      "keywords": {
+        "QC": [
+          "détaillant thermopompe"
+        ],
+        "ON": [
+          "HVAC dealer installation"
+        ]
+      },
+      "discovery_allowed": true
+    },
+    "H04": {
+      "name": "commercial_hvac_contractor",
+      "entity_type": "business",
+      "keywords": {
+        "QC": [
+          "entrepreneur CVAC commercial"
+        ],
+        "ON": [
+          "commercial HVAC contractor"
+        ]
+      },
+      "discovery_allowed": true
+    },
+    "H05": {
+      "name": "repair_replacement_company",
+      "entity_type": "business",
+      "keywords": {
+        "QC": [
+          "réparation thermopompe"
+        ],
+        "ON": [
+          "HVAC replacement service"
+        ]
+      },
+      "discovery_allowed": true
+    },
+    "H06": {
+      "name": "independent_heat_pump_contractor",
+      "entity_type": "owner_operator",
+      "keywords": {
+        "QC": [
+          "entrepreneur indépendant thermopompe"
+        ],
+        "ON": [
+          "independent heat pump contractor"
+        ]
+      },
+      "discovery_allowed": true
+    },
+    "H07": {
+      "name": "independent_repair_contractor",
+      "entity_type": "owner_operator",
+      "keywords": {
+        "QC": [
+          "technicien réparation climatisation"
+        ],
+        "ON": [
+          "independent HVAC repair contractor"
+        ]
+      },
+      "discovery_allowed": true
+    },
+    "H08": {
+      "name": "specialty_installer",
+      "entity_type": "owner_operator",
+      "keywords": {
+        "QC": [
+          "installateur climatiseur mural"
+        ],
+        "ON": [
+          "mini split installer"
+        ]
+      },
+      "discovery_allowed": true
+    },
+    "H09": {
+      "name": "subcontract_install_team",
+      "entity_type": "partner",
+      "keywords": {
+        "QC": [
+          "sous-traitant CVAC"
+        ],
+        "ON": [
+          "HVAC installation subcontractor"
+        ]
+      },
+      "discovery_allowed": true
+    },
+    "H10": {
+      "name": "employee_or_apprentice",
+      "entity_type": "excluded",
+      "keywords": {
+        "QC": [
+          "apprenti frigoriste"
+        ],
+        "ON": [
+          "HVAC apprentice"
+        ]
+      },
+      "discovery_allowed": false
+    }
+  },
+  "profile_qualification": {
+    "H01": {"service_capabilities": ["heat_pump_installation"], "market_segments": ["residential"], "business_models": ["company"]},
+    "H02": {"service_capabilities": ["heating", "cooling"], "business_models": ["company"]},
+    "H03": {"service_capabilities": ["heat_pump_installation"], "business_models": ["multi_brand_dealer"]},
+    "H04": {"service_capabilities": ["commercial_hvac"], "market_segments": ["commercial"], "business_models": ["company"]},
+    "H05": {"service_capabilities": ["hvac_repair", "hvac_replacement"], "business_models": ["company"]},
+    "H06": {"service_capabilities": ["heat_pump_installation"], "business_models": ["independent_operator"]},
+    "H07": {"service_capabilities": ["hvac_repair"], "business_models": ["independent_operator"]},
+    "H08": {"service_capabilities": ["mini_split_installation"], "business_models": ["independent_operator"]},
+    "H09": {"service_capabilities": ["subcontract_installation"], "business_models": ["installation_team"]},
+    "H10": {}
+  },
+  "scoring": {
+    "business": {
+      "product_fit": 25,
+      "purchasing_authority": 20,
+      "market_coverage": 15,
+      "intent": 15,
+      "business_verification": 15,
+      "partner_feasibility": 10
+    },
+    "owner_operator": {
+      "credentials": 25,
+      "service_area": 20,
+      "business_autonomy": 20,
+      "installation_fit": 15,
+      "capacity": 10,
+      "partner_feasibility": 10
+    },
+    "threshold_a": 80,
+    "threshold_b": 70
+  },
+  "outreach": {
+    "auto_send": false,
+    "requires_compliance_review": true,
+    "require_business_contact_basis": true,
+    "do_not_contact_enforced": true
+  },
+  "jobs": {
+    "resume": true,
+    "max_retries": 3,
+    "idempotent": true,
+    "max_results_per_run": 200
+  }
+}
