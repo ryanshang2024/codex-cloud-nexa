@@ -1,0 +1,23 @@
+{
+  "date_utc": "2026-10-11",
+  "file": "NEXA_HVAC_User_Journey_V3_2.mp4",
+  "duration_seconds": 290.8,
+  "resolution": "1920x1080",
+  "fps": 24,
+  "video_codec": "H.264 yuv420p",
+  "audio": "AAC 48kHz stereo",
+  "chapter_count": 19,
+  "caption_count": 38,
+  "actual_mp4_frames_reviewed": 26,
+  "full_decode_errors": 0,
+  "integrated_loudness_lufs": -16.13,
+  "true_peak_dbtp": -1.95,
+  "runtime_errors": 0,
+  "motion_assertion_errors": 0,
+  "contrast_errors": 0,
+  "reviewed_layout_warnings": "3 short intentional overlaps within intro-to-chapter-1 crossfade; exact selectors and times in VIDEO_CHECK.json",
+  "demonstration_only": true,
+  "real_provider_calls": 0,
+  "messages_sent": 0,
+  "sha256": "6a0563d79edf850e982814b21ca86f0410f16ec811114c8c7a127bc57eab76fe"
+}
