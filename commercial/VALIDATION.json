@@ -1,0 +1,22 @@
+{
+  "duration_seconds": 45.6,
+  "under_one_minute": true,
+  "format": "1080p / H.264 / AAC / 24fps",
+  "chapters": 8,
+  "caption_cues": 13,
+  "commercial_narrative_checked": true,
+  "unverified_conversion_percentages": false,
+  "no_company_or_contact_records": true,
+  "ai_and_auto_outreach_labelled_future_integrations": true,
+  "strict_check_passed": true,
+  "errors": 0,
+  "warnings": 0,
+  "motion_samples": 300,
+  "contrast_text_checks_passed": 58,
+  "full_video_decode_passed": true,
+  "integrated_audio_lufs": -16.38,
+  "audio_true_peak_dbtp": -1.72,
+  "transition_info": "16 informational occlusion findings at 30.95 seconds are the outgoing scene under its incoming crossfade, reviewed in snapshots.",
+  "source_revision": "40e0bf45f74a025641e9dc88953987a7a149732e",
+  "duration_new_video_only": true
+}

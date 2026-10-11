@@ -30,3 +30,12 @@
 - [A4 打印 PDF](flyer/NEXA_AI_Sales_Engine_Flyer_CN_A4.pdf)
 
 当前是 MVP 能力蓝图；真实渠道与 AI 服务待接入，自动发送未启用。
+
+## 加盟商商业宣传片（约 46 秒）
+
+中文配音、中文字幕、1080p，介绍从客户画像到 CRM 的销售流程。
+
+- [下载宣传片 MP4](commercial/NEXA_Franchise_Commercial_V3_2_CN_46s.mp4?raw=true)
+- [宣传片说明](commercial/README.zh.md)
+- [可编辑工程](commercial/NEXA_Franchise_Commercial_Source.zip?raw=true)
+

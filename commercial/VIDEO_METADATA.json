@@ -1,0 +1,279 @@
+{
+  "streams": [
+    {
+      "index": 0,
+      "codec_name": "h264",
+      "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+      "profile": "High",
+      "codec_type": "video",
+      "codec_tag_string": "avc1",
+      "codec_tag": "0x31637661",
+      "width": 1920,
+      "height": 1080,
+      "coded_width": 1920,
+      "coded_height": 1080,
+      "closed_captions": 0,
+      "film_grain": 0,
+      "has_b_frames": 0,
+      "sample_aspect_ratio": "1:1",
+      "display_aspect_ratio": "16:9",
+      "pix_fmt": "yuv420p",
+      "level": 40,
+      "color_range": "tv",
+      "color_space": "bt709",
+      "color_transfer": "bt709",
+      "color_primaries": "bt709",
+      "chroma_location": "center",
+      "field_order": "progressive",
+      "refs": 1,
+      "is_avc": "true",
+      "nal_length_size": "4",
+      "id": "0x1",
+      "r_frame_rate": "24/1",
+      "avg_frame_rate": "24/1",
+      "time_base": "1/12288",
+      "start_pts": 0,
+      "start_time": "0.000000",
+      "duration_ts": 560128,
+      "duration": "45.583333",
+      "bit_rate": "650773",
+      "bits_per_raw_sample": "8",
+      "nb_frames": "1094",
+      "extradata_size": 52,
+      "disposition": {
+        "default": 1,
+        "dub": 0,
+        "original": 0,
+        "comment": 0,
+        "lyrics": 0,
+        "karaoke": 0,
+        "forced": 0,
+        "hearing_impaired": 0,
+        "visual_impaired": 0,
+        "clean_effects": 0,
+        "attached_pic": 0,
+        "timed_thumbnails": 0,
+        "non_diegetic": 0,
+        "captions": 0,
+        "descriptions": 0,
+        "metadata": 0,
+        "dependent": 0,
+        "still_image": 0,
+        "multilayer": 0
+      },
+      "tags": {
+        "language": "und",
+        "handler_name": "VideoHandler",
+        "vendor_id": "[0][0][0][0]",
+        "encoder": "Lavc61.19.101 libx264"
+      }
+    },
+    {
+      "index": 1,
+      "codec_name": "aac",
+      "codec_long_name": "AAC (Advanced Audio Coding)",
+      "profile": "LC",
+      "codec_type": "audio",
+      "codec_tag_string": "mp4a",
+      "codec_tag": "0x6134706d",
+      "sample_fmt": "fltp",
+      "sample_rate": "48000",
+      "channels": 2,
+      "channel_layout": "stereo",
+      "bits_per_sample": 0,
+      "initial_padding": 0,
+      "id": "0x2",
+      "r_frame_rate": "0/0",
+      "avg_frame_rate": "0/0",
+      "time_base": "1/48000",
+      "start_pts": 0,
+      "start_time": "0.000000",
+      "duration_ts": 2188800,
+      "duration": "45.600000",
+      "bit_rate": "159457",
+      "nb_frames": "2138",
+      "extradata_size": 5,
+      "disposition": {
+        "default": 1,
+        "dub": 0,
+        "original": 0,
+        "comment": 0,
+        "lyrics": 0,
+        "karaoke": 0,
+        "forced": 0,
+        "hearing_impaired": 0,
+        "visual_impaired": 0,
+        "clean_effects": 0,
+        "attached_pic": 0,
+        "timed_thumbnails": 0,
+        "non_diegetic": 0,
+        "captions": 0,
+        "descriptions": 0,
+        "metadata": 0,
+        "dependent": 0,
+        "still_image": 0,
+        "multilayer": 0
+      },
+      "tags": {
+        "language": "und",
+        "handler_name": "SoundHandler",
+        "vendor_id": "[0][0][0][0]"
+      }
+    },
+    {
+      "index": 2,
+      "codec_name": "bin_data",
+      "codec_long_name": "binary data",
+      "codec_type": "data",
+      "codec_tag_string": "text",
+      "codec_tag": "0x74786574",
+      "id": "0x3",
+      "r_frame_rate": "0/0",
+      "avg_frame_rate": "0/0",
+      "time_base": "1/1000",
+      "start_pts": 0,
+      "start_time": "0.000000",
+      "duration_ts": 45583,
+      "duration": "45.583000",
+      "bit_rate": "68",
+      "nb_frames": "8",
+      "extradata_size": 63,
+      "disposition": {
+        "default": 0,
+        "dub": 0,
+        "original": 0,
+        "comment": 0,
+        "lyrics": 0,
+        "karaoke": 0,
+        "forced": 0,
+        "hearing_impaired": 0,
+        "visual_impaired": 0,
+        "clean_effects": 0,
+        "attached_pic": 0,
+        "timed_thumbnails": 0,
+        "non_diegetic": 0,
+        "captions": 0,
+        "descriptions": 0,
+        "metadata": 0,
+        "dependent": 0,
+        "still_image": 0,
+        "multilayer": 0
+      },
+      "tags": {
+        "language": "eng",
+        "handler_name": "SubtitleHandler"
+      }
+    }
+  ],
+  "chapters": [
+    {
+      "id": 0,
+      "time_base": "1/1000",
+      "start": 0,
+      "start_time": "0.000000",
+      "end": 4750,
+      "end_time": "4.750000",
+      "tags": {
+        "title": "加盟商增长 · 从精准获客开始"
+      }
+    },
+    {
+      "id": 1,
+      "time_base": "1/1000",
+      "start": 4750,
+      "start_time": "4.750000",
+      "end": 11458,
+      "end_time": "11.458000",
+      "tags": {
+        "title": "找对区域 · 找对合作对象"
+      }
+    },
+    {
+      "id": 2,
+      "time_base": "1/1000",
+      "start": 11458,
+      "start_time": "11.458000",
+      "end": 17917,
+      "end_time": "17.917000",
+      "tags": {
+        "title": "多源线索 · 资料有据可查"
+      }
+    },
+    {
+      "id": 3,
+      "time_base": "1/1000",
+      "start": 17917,
+      "start_time": "17.917000",
+      "end": 23750,
+      "end_time": "23.750000",
+      "tags": {
+        "title": "优先客户 · 一目了然"
+      }
+    },
+    {
+      "id": 4,
+      "time_base": "1/1000",
+      "start": 23750,
+      "start_time": "23.750000",
+      "end": 31000,
+      "end_time": "31.000000",
+      "tags": {
+        "title": "双语开发信 · 审批后再触达"
+      }
+    },
+    {
+      "id": 5,
+      "time_base": "1/1000",
+      "start": 31000,
+      "start_time": "31.000000",
+      "end": 36583,
+      "end_time": "36.583000",
+      "tags": {
+        "title": "每一条回复 · 都有下一步"
+      }
+    },
+    {
+      "id": 6,
+      "time_base": "1/1000",
+      "start": 36583,
+      "start_time": "36.583000",
+      "end": 41042,
+      "end_time": "41.042000",
+      "tags": {
+        "title": "从发现到合作 · 串起销售闭环"
+      }
+    },
+    {
+      "id": 7,
+      "time_base": "1/1000",
+      "start": 41042,
+      "start_time": "41.042000",
+      "end": 45583,
+      "end_time": "45.583000",
+      "tags": {
+        "title": "让每一次连接 · 更有依据"
+      }
+    }
+  ],
+  "format": {
+    "filename": "/workspace/artifacts/nexa-franchise-commercial/deliverables/NEXA_Franchise_Commercial_V3_2_CN_46s.mp4",
+    "nb_streams": 3,
+    "nb_programs": 0,
+    "nb_stream_groups": 0,
+    "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+    "format_long_name": "QuickTime / MOV",
+    "start_time": "0.000000",
+    "duration": "45.600000",
+    "size": "4643411",
+    "bit_rate": "814633",
+    "probe_score": 100,
+    "tags": {
+      "major_brand": "isom",
+      "minor_version": "512",
+      "compatible_brands": "isomiso2avc1mp41",
+      "title": "NEXA AI Sales Engine V3.2 — 加盟商商业宣传片",
+      "encoder": "Lavf61.7.103",
+      "comment": "Franchisee product capabilities. AI collaboration and automatic outreach are phased future integrations."
+    }
+  }
+}
