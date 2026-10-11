@@ -21,3 +21,12 @@
 最终 MP4 完整解码无错误，26 处实片画面已核对，19 个章节导航，38 段字幕。技术信息与散列见 `VALIDATION.json`、`SHA256SUMS.txt`。
 
 源包包含 HTML/GSAP 合成、录屏片段、品牌字体、配音与原创音乐；不含凭据、数据库、原始上传文档、语音模型权重或依赖目录。
+
+## 中文销售宣传单
+
+完整图解：画像设定 → 授权企业来源 → 数据与资质核验 → AI 草稿和人工审批 → 授权自动触达（后续规划）→ 回复和 CRM 闭环。
+
+- [PNG 图片](flyer/NEXA_AI_Sales_Engine_Flyer_CN.png)
+- [A4 打印 PDF](flyer/NEXA_AI_Sales_Engine_Flyer_CN_A4.pdf)
+
+当前是 MVP 能力蓝图；真实渠道与 AI 服务待接入，自动发送未启用。

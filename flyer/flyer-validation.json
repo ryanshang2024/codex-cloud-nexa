@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-11",
+  "image_dimensions": [
+    1054,
+    1492
+  ],
+  "pdf_page": "A4 portrait, one page, original image embedded without cropping",
+  "files": {
+    "NEXA_AI_Sales_Engine_Flyer_CN.png": {
+      "bytes": 1694022,
+      "sha256": "fd273c66111b5be833983819cee97392226ab0764916ee85ca1875b6eb37f9f3"
+    },
+    "NEXA_AI_Sales_Engine_Flyer_CN_A4.pdf": {
+      "bytes": 2336006,
+      "sha256": "3c53bdfb202754df92cf10d92f33a00190263f4e34de1ab94feae490f4f2b868"
+    }
+  },
+  "status_disclosures": [
+    "MVP DEMO",
+    "real channels and AI integration pending",
+    "automatic sending planned and currently disabled"
+  ]
+}
