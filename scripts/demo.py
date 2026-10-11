@@ -20,7 +20,7 @@ def request(method,path,value=None):
 def demo():
     report={'mode':'DEMO','real_provider_calls':0,'messages_sent':0,'steps':[]}
     for province,profile in [('QC','H01'),('ON','H06')]:
-        job=request('POST','jobs',{'province':province,'profile':profile,'mode':'demo','idempotency_key':'documented-demo-'+province+'-'+profile})
+        job=request('POST','jobs',{'province':province,'profile':profile,'mode':'demo','idempotency_key':'documented-demo-v3.3-'+province+'-'+profile})
         for _ in range(30):
             info=request('GET','jobs/'+job['id'])
             if info['job']['status']=='completed':break

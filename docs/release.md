@@ -45,3 +45,10 @@
 部署访问检查先复现 4 failed / 1 passed，修复后 **5 passed**；PostgreSQL **124 passed**，本地浏览器 **4 passed**，构建/TypeScript、重启和禁发 DEMO 通过。5 项访问检查使用本地 HTTP 服务和 TEST_ONLY 登录，不证明目标域名 DNS、HTTPS 证书或源站上线。
 
 目标域名目前被云环境代理 CONNECT 403 拒绝；没有配置托管平台、服务器或 DNS 身份，实际部署步骤 unrun。已保留原配置并追加域名到云环境网络草稿 revision 4，尚未应用/发布。具体变量、当前状态和所需平台信息见 [域名部署记录](domain-deployment.md)。源码更新和网络草稿保存均不能称为域名发布完成。
+
+
+## V3.3 源码发布 · 2026-10-11
+
+按用户此前明确的 GitHub main 源码发布范围更新企业权限架构。Admin Console / Employee App、独立个人会话、记录/字段授权、中央费用账本、n8n 服务身份及增量迁移 003 随源码交付。完整规范与证据见 [V3.3 PRD](prd-v3.3.md)、[验收记录](validation-v3.3.md) 和 [脱敏证据](acceptance-v3.3.json)。
+
+开发验证：163 项后台测试、6 项双端浏览器及 6 项部署配置测试通过；TypeScript/production build 通过，草稿授权补测 1 项通过。真实供应商、语音/PTT、SSO/OIDC、真实客户抽样及域名部署仍是独立验收门槛。未包含凭据、原始附件、数据库、原始测试追踪或私人日志；第一阶段没有启用发送。

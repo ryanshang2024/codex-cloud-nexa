@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 from backend.db import transaction
 from backend.domain import SETTINGS
+from backend.access import normalize_role, password_hash
 
 IMAGE='postgres@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24'
 LOCAL=ROOT/'.local'
@@ -73,6 +74,22 @@ def setup():
         with os.fdopen(fd,'w') as f:
             f.write('POSTGRES_PASSWORD='+admin_pw+'\nPOSTGRES_DB=nexa\n')
     cfg=json.loads(cfg_path.read_text())
+    # Each automation identity has its own server-side token and HMAC secret.
+    cfg.setdefault('webhook_secrets',{})
+    service_path=LOCAL/'service-identities.json'
+    services=json.loads(service_path.read_text()) if service_path.exists() else {}
+    for tenant in cfg['tenant_ids']:
+        actor=tenant+':automation'
+        if actor not in services:
+            token=secrets.token_urlsafe(40)
+            cfg['auth_bindings']=[b for b in cfg['auth_bindings'] if b['user_id']!=actor]
+            cfg['auth_bindings'].append({'token_hash':hashlib.sha256(token.encode()).hexdigest(),
+                'tenant_id':tenant,'user_id':actor,'role':'service'})
+            services[actor]={'tenant_id':tenant,'user_id':actor,'token':token}
+        cfg['webhook_secrets'].setdefault(actor,secrets.token_urlsafe(40))
+        services[actor]['signing_secret']=cfg['webhook_secrets'][actor]
+    service_path.write_text(json.dumps(services,indent=2));service_path.chmod(0o600)
+    cfg_path.write_text(json.dumps(cfg,indent=2));cfg_path.chmod(0o600)
     inspected=subprocess.run(['docker','inspect','nexa-postgres'],capture_output=True,text=True)
     if inspected.returncode:
         run(['docker','run','-d','--name','nexa-postgres','--label','nexa.project=hvac-mvp',
@@ -112,7 +129,7 @@ def setup():
     for tenant in cfg['tenant_ids']:
         with transaction(tenant,'setup') as db:
             if not db.list('industry_templates'):
-                db.put('industry_templates',{'industry':'HVAC','version':'3.2','market':['QC','ON']})
+                db.put('industry_templates',{'industry':'HVAC','version':'3.3','market':['QC','ON']})
             for code,value in SETTINGS['profiles'].items():
                 if not db.list('icp_profiles',code=code):
                     db.put('icp_profiles',{'code':code,**value})
@@ -121,12 +138,23 @@ def setup():
                     db.put('source_policies',{'provider':provider,'enabled':False,'purposes':[],
                         'provenance_license':None,'terms_url':None,'reviewed_by':None,'expires_at':None,
                         'request_limit':0,'requests_per_minute':0,'cost_per_call':None})
+    login_path=LOCAL/'demo-logins.json'
+    logins=json.loads(login_path.read_text()) if login_path.exists() else {}
+    for b in cfg['auth_bindings']:
+        with transaction(b['tenant_id'],'setup') as db:
+            existing=db.get('users',b['user_id'])
+            role=normalize_role(existing['role'] if existing else b['role'])
+            if not existing or (role!='service' and not existing.get('password_hash')):
+                password=secrets.token_urlsafe(24)
+                db.put('users',{**(existing or {}),'id':b['user_id'],'role':role,'active':existing.get('active',True) if existing else True,'display_name':existing.get('display_name',b['user_id'].split(':')[-1]) if existing else b['user_id'].split(':')[-1],
+                    'password_hash':password_hash(password) if role!='service' else None})
+                if role!='service': logins[b['user_id']]={'tenant_id':b['tenant_id'],'user_id':b['user_id'],'password':password}
+    login_path.write_text(json.dumps(logins,indent=2));login_path.chmod(0o600)
     envfile=ROOT/'frontend/.env.local'
     if envfile.parent.exists() and not envfile.exists():
-        tokens=json.loads((LOCAL/'tokens.json').read_text())
         fd=os.open(envfile,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
         with os.fdopen(fd,'w') as f:
-            f.write('NEXA_API_URL=http://127.0.0.1:8000\nNEXA_API_TOKEN='+tokens['nexa-demo']['admin']+'\n')
+            f.write('NEXA_API_URL=http://127.0.0.1:8000\n')
     print('PostgreSQL ready; migrations, app role and three isolated tenants verified.')
 
 

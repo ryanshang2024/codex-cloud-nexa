@@ -84,6 +84,7 @@ class DraftInput(Input):
     contact_id: str
     language: Literal['fr','en'] | None = None
     use_ai: bool = False
+    idempotency_key: str | None = Field(default=None,min_length=1,max_length=200)
 
 
 class DraftEdit(Input):

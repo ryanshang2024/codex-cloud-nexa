@@ -16,6 +16,8 @@ from fastapi.responses import Response
 from psycopg import sql
 
 from . import schemas as s
+from .access import identity, scope, authorize
+from . import usage
 from .ai import reserve as reserve_ai, suggest, validate_suggestion
 from .db import config, transaction, utcnow
 from .domain import (FACTS, SETTINGS, allowed_evidence, assess, contact_gate, credential_supports, date, evidence_map, fail, fingerprint,
@@ -23,28 +25,11 @@ from .domain import (FACTS, SETTINGS, allowed_evidence, assess, contact_gate, cr
 from .jobs import create_job, process_one
 from .providers import ENV, route
 
-app = FastAPI(title='NEXA HVAC · Evidence-first MVP', version='3.2.0')
-
-
-def identity(authorization: str | None = Header(default=None)):
-    if not authorization or not authorization.startswith('Bearer '):
-        fail('Authentication required', 401)
-    digest = hashlib.sha256(authorization[7:].encode()).hexdigest()
-    for binding in config()['auth_bindings']:
-        if hmac.compare_digest(binding['token_hash'], digest):
-            return binding
-    fail('Invalid credential', 401)
-
-
-@contextmanager
-def scope(who, roles=None):
-    if roles and who['role'] not in roles + ['admin']:
-        fail('Role is not permitted', 403)
-    with transaction(who['tenant_id'], who['user_id']) as db:
-        yield db
+app = FastAPI(title='NEXA Enterprise AI Platform', version='3.3.0')
 
 
 @app.exception_handler(psycopg.IntegrityError)
+@app.exception_handler(psycopg.errors.InsufficientPrivilege)
 async def integrity_error(request, exc):
     # Never return database SQL or personal values to clients.
     return Response(json.dumps({'detail':'Database constraint or identity conflict'}), status_code=409, media_type='application/json')
@@ -54,19 +39,20 @@ async def integrity_error(request, exc):
 def health():
     with transaction(config()['tenant_ids'][0]) as db:
         db.conn.execute('SELECT 1')
-    return {'status':'ok','database':'postgresql','auto_send':False,'version':'3.2.0'}
+    return {'status':'ok','database':'postgresql','auto_send':False,'version':'3.3.0'}
 
 
 @app.get('/api/identity')
 def me(who=Depends(identity)):
-    return {k:who[k] for k in ['tenant_id','user_id','role']}
+    return {k:who[k] for k in ['tenant_id','user_id','role','display_name','permissions']}
 
 
 @app.get('/api/dashboard')
 def dashboard(who=Depends(identity)):
-    with scope(who) as db:
+    with scope(who,'leads.read') as db:
+        db.audit('lead_pool_read',db.tenant_id,'Management dashboard')
         tables = ['accounts','leads','icp_profiles','source_policies','search_jobs','outreach_drafts',
-                  'opportunities','tasks','partners','projects','interactions']
+                  'opportunities','tasks','partners','projects','interactions','work_assignments','work_notes']
         output = {t: db.list(t) for t in tables}
         persisted={lead['account_id']:lead for lead in output['leads']}
         current={a['id']:assess(db,a) for a in output['accounts']}
@@ -74,15 +60,16 @@ def dashboard(who=Depends(identity)):
         output['leads']=[{**persisted.get(a['id'],{}),**current[a['id']],'account_id':a['id']} for a in output['accounts']]
         output['icp_profiles']=[{**p,'qualification':SETTINGS['profile_qualification'][p['code']]} for p in output['icp_profiles']]
         output['auto_send'] = False
-        output['analytics'] = analytics(db)
+        output['analytics'] = analytics(db,None if who['role']=='super_admin' else who['grants'].get('analytics.company',[])) if 'analytics.company' in who['permissions'] else {}
+        output['analytics_scope'] = ['QC','ON'] if who['role']=='super_admin' else who['grants'].get('analytics.company',[])
         output['identity'] = {k:who[k] for k in ['tenant_id','user_id','role']}
         return output
 
 
-def analytics(db):
+def analytics(db,provinces=None):
     groups = {}
     for demo in [True,False]:
-        accounts = [a for a in db.list('accounts') if a['is_demo'] == demo]
+        accounts = [a for a in db.list('accounts') if a['is_demo'] == demo and (provinces is None or a['province'] in provinces)]
         ids = {a['id'] for a in accounts}
         groups['demo' if demo else 'real'] = {
             'discovered':len(accounts),
@@ -99,13 +86,13 @@ def analytics(db):
 
 @app.get('/api/router')
 def router(province:s.Province, profile:s.Profile, who=Depends(identity)):
-    with scope(who) as db:
+    with scope(who,'icp.configure') as db:
         return route(db,province,profile)
 
 
 @app.patch('/api/profiles/{code}')
 def profile_update(code:s.Profile, value:s.ProfileInput, who=Depends(identity)):
-    with scope(who,['manager','researcher']) as db:
+    with scope(who,'icp.configure') as db:
         old = db.list('icp_profiles',code=code)[0]
         row = db.put('icp_profiles',{**old,**value.model_dump()})
         db.audit('profile_updated',row['id'])
@@ -114,7 +101,7 @@ def profile_update(code:s.Profile, value:s.ProfileInput, who=Depends(identity)):
 
 @app.put('/api/policies/{provider}')
 def policy_update(provider:str,value:s.PolicyInput,who=Depends(identity)):
-    with scope(who,['compliance']) as db:
+    with scope(who,'sources.configure') as db:
         if provider not in SETTINGS['sources']+['openai']:
             fail('Unsupported provider',422)
         if value.enabled and not value.reviewed_terms:
@@ -135,7 +122,7 @@ def policy_update(provider:str,value:s.PolicyInput,who=Depends(identity)):
 
 @app.post('/api/accounts')
 def account_create(value:s.AccountInput,who=Depends(identity)):
-    with scope(who,['researcher']) as db:
+    with scope(who,'research.start') as db:
         tenant=db.conn.execute('SELECT is_demo FROM tenants WHERE id=%s',(db.tenant_id,)).fetchone()
         if value.is_demo and not tenant['is_demo']:
             fail('DEMO account requires DEMO tenant')
@@ -144,8 +131,9 @@ def account_create(value:s.AccountInput,who=Depends(identity)):
 
 @app.get('/api/accounts/{account_id}')
 def detail(account_id:str,who=Depends(identity)):
-    with scope(who) as db:
+    with scope(who,'leads.read') as db:
         account=require(db,'accounts',account_id)
+        db.audit('sensitive_account_read',account_id)
         result={'account':account,'assessment':assess(db,account)}
         for table in ['evidence','contacts','credential_verifications','consent_records','outreach_drafts','interactions','tasks','opportunities','partners','projects']:
             result[table]=db.list(table,account_id=account_id)
@@ -154,7 +142,7 @@ def detail(account_id:str,who=Depends(identity)):
 
 @app.post('/api/accounts/{account_id}/evidence')
 def evidence_create(account_id:str,value:s.EvidenceInput,who=Depends(identity)):
-    with scope(who,['researcher','compliance']) as db:
+    with scope(who,'leads.review') as db:
         a=require(db,'accounts',account_id,lock=True)
         if value.fact_type not in FACTS:
             fail('Unsupported fact type',422)
@@ -173,7 +161,7 @@ def evidence_create(account_id:str,value:s.EvidenceInput,who=Depends(identity)):
 
 @app.post('/api/evidence/{identifier}/review')
 def evidence_review(identifier:str,value:s.EvidenceReview,who=Depends(identity)):
-    with scope(who,['researcher','compliance']) as db:
+    with scope(who,'leads.review') as db:
         e=require(db,'evidence',identifier,lock=True)
         row=db.put('evidence',{**e,'verification':'verified' if value.approved else 'rejected','reviewer_id':who['user_id'],
             'confidence':value.confidence if value.confidence is not None else e['confidence']})
@@ -185,7 +173,7 @@ def evidence_review(identifier:str,value:s.EvidenceReview,who=Depends(identity))
 
 @app.post('/api/accounts/{account_id}/credentials')
 def credentials(account_id:str,value:s.CredentialInput,who=Depends(identity)):
-    with scope(who,['researcher','compliance']) as db:
+    with scope(who,'leads.review') as db:
         a=require(db,'accounts',account_id,lock=True)
         if value.province!=a['province']:
             fail('Credential province mismatch')
@@ -215,13 +203,13 @@ def credentials(account_id:str,value:s.CredentialInput,who=Depends(identity)):
 
 @app.post('/api/accounts/{account_id}/score')
 def scoring(account_id:str,who=Depends(identity)):
-    with scope(who,['researcher','manager']) as db:
+    with scope(who,'research.analyze') as db:
         return score(db,account_id)
 
 
 @app.post('/api/accounts/{account_id}/score/override')
 def override(account_id:str,value:s.Override,who=Depends(identity)):
-    with scope(who,['manager']) as db:
+    with scope(who,'leads.override') as db:
         a=require(db,'accounts',account_id,lock=True)
         current=assess(db,a)
         if current['exclusion_reasons'] or current['manual_review']:
@@ -246,7 +234,7 @@ def override(account_id:str,value:s.Override,who=Depends(identity)):
 
 @app.post('/api/accounts/{account_id}/contacts')
 def contact_create(account_id:str,value:s.ContactInput,who=Depends(identity)):
-    with scope(who,['researcher']) as db:
+    with scope(who,'leads.review') as db:
         a=require(db,'accounts',account_id,lock=True)
         e=require(db,'evidence',value.evidence_id)
         if e['account_id']!=account_id or e.get('fact_type')!='contact' or e.get('value')!=value.email:
@@ -261,7 +249,7 @@ def contact_create(account_id:str,value:s.ContactInput,who=Depends(identity)):
 
 @app.post('/api/accounts/{account_id}/consents')
 def consent_create(account_id:str,value:s.ConsentInput,who=Depends(identity)):
-    with scope(who,['compliance','sales']) as db:
+    with scope(who,'leads.review') as db:
         a=require(db,'accounts',account_id,lock=True)
         c=require(db,'contacts',value.contact_id)
         if c['account_id']!=account_id or c.get('evidence_id')!=value.evidence_id:
@@ -280,7 +268,7 @@ def consent_create(account_id:str,value:s.ConsentInput,who=Depends(identity)):
 
 @app.post('/api/consents/{identifier}/review')
 def consent_review(identifier:str,value:s.Review,who=Depends(identity)):
-    with scope(who,['compliance']) as db:
+    with scope(who,'leads.review') as db:
         c=require(db,'consent_records',identifier,lock=True)
         a=require(db,'accounts',c['account_id'],lock=True)
         e=require(db,'evidence',c['evidence_id'])
@@ -300,7 +288,8 @@ def consent_review(identifier:str,value:s.Review,who=Depends(identity)):
 def draft_create(account_id:str,value:s.DraftInput,who=Depends(identity)):
     ai_result,context=None,None
     if value.use_ai:
-        with scope(who,['sales','manager']) as db:
+        if not value.idempotency_key: fail('AI calls require an idempotency key',422)
+        with scope(who,'drafts.create') as db:
             a=require(db,'accounts',account_id)
             c=require(db,'contacts',value.contact_id)
             if a['is_demo']:
@@ -310,10 +299,22 @@ def draft_create(account_id:str,value:s.DraftInput,who=Depends(identity)):
             facts,_=evidence_map(db,a,'outreach')
             context=fingerprint(db,a,c)
         # Commit quota before the paid API call; a lost/failed response still consumes budget.
-        with scope(who,['sales','manager']) as db:
+        with scope(who,'drafts.create') as db:
+            p=usage.policy(db,lock=True)
+            input_bound=len(str([{'id':e['id'],'fact_type':e['fact_type']} for e in facts.values()]).encode())+1024
+            reservation=usage.reserve(db,who,'draft:'+value.idempotency_key,'openai',cost_micros=usage.model_estimate(p,input_bound,300),
+                input_tokens=input_bound,output_tokens=300,task_id=account_id)
+            if reservation.get('replayed'): fail('AI request already reserved; no repeated provider call',409)
             reserve_ai(db)
-        ai_result=suggest(a,list(facts.values()))
-    with scope(who,['sales','manager']) as db:
+        receipt={}
+        try:
+            ai_result=suggest(a,list(facts.values()),model=p['model'],receipt=receipt)
+        except Exception:
+            with transaction(who['tenant_id'],who['user_id']) as db: usage.settle(db,reservation['id'],failed=True)
+            raise
+        actual={**receipt,'cost_micros':(receipt['input_tokens']*p['input_micros_per_million']+receipt['output_tokens']*p['output_micros_per_million']+999999)//1000000}
+        with transaction(who['tenant_id'],who['user_id']) as db: usage.settle(db,reservation['id'],actual=actual)
+    with scope(who,'drafts.create') as db:
         a=require(db,'accounts',account_id,lock=True)
         c=require(db,'contacts',value.contact_id)
         if c['account_id']!=account_id:
@@ -336,7 +337,7 @@ def draft_create(account_id:str,value:s.DraftInput,who=Depends(identity)):
 
 @app.patch('/api/drafts/{identifier}')
 def draft_edit(identifier:str,value:s.DraftEdit,who=Depends(identity)):
-    with scope(who,['sales','manager']) as db:
+    with scope(who,'drafts.create') as db:
         d=require(db,'outreach_drafts',identifier,lock=True)
         if d['revision']!=value.revision:
             fail('Stale draft revision')
@@ -353,7 +354,7 @@ def draft_edit(identifier:str,value:s.DraftEdit,who=Depends(identity)):
 
 @app.post('/api/drafts/{identifier}/approve')
 def draft_approve(identifier:str,value:s.DraftApprove,who=Depends(identity)):
-    with scope(who,['manager']) as db:
+    with scope(who,'drafts.approve') as db:
         d=require(db,'outreach_drafts',identifier,lock=True)
         a=require(db,'accounts',d['account_id'],lock=True)
         c=require(db,'contacts',d['contact_id'])
@@ -381,39 +382,40 @@ def draft_approve(identifier:str,value:s.DraftApprove,who=Depends(identity)):
 
 @app.post('/api/drafts/{identifier}/send')
 def no_send(identifier:str,who=Depends(identity)):
-    with scope(who) as db:
+    with scope(who,'drafts.create') as db:
         require(db,'outreach_drafts',identifier)
     fail('Phase one: marketing delivery is permanently disabled',423)
 
 
 @app.post('/api/accounts/{account_id}/replies')
 def replies(account_id:str,value:s.ReplyInput,who=Depends(identity)):
-    with scope(who,['sales','manager']) as db:
+    with scope(who,'crm.manage') as db:
         return ingest_reply(db,account_id,**value.model_dump())
 
 
 @app.post('/api/accounts/{account_id}/suppress')
 def dnc(account_id:str,value:s.Review,who=Depends(identity)):
-    with scope(who,['sales','compliance','manager']) as db:
+    with scope(who,'crm.manage') as db:
         suppress(db,account_id,value.reason)
         return {'do_not_contact':True}
 
 
 @app.post('/api/jobs')
 def jobs(value:s.JobInput,who=Depends(identity)):
-    with scope(who,['researcher']) as db:
-        return create_job(db,value.model_dump())
+    with scope(who,'research.start') as db:
+        return create_job(db,value.model_dump(),who=who)
 
 
 @app.post('/api/jobs/{identifier}/{action}')
 def job_action(identifier:str,action:str,who=Depends(identity)):
     if action not in ['pause','resume','step']:
         fail('Unsupported action',422)
-    with scope(who,['researcher']) as db:
+    with scope(who,'research.start') as db:
         job=require(db,'search_jobs',identifier,lock=True)
         if action!='step':
             if job['status'] in ['completed','failed']:
                 fail('Finished jobs cannot resume')
+            if action=='resume': usage.job_limits(db,{'tenant_id':db.tenant_id,'user_id':job.get('actor_id','')},job,existing_id=job['id'])
             row=db.put('search_jobs',{**job,'status':'paused' if action=='pause' else 'queued',
                 'lease_until':job['lease_until'],'next_attempt_at':None})
             db.audit('job_'+action,identifier)
@@ -423,7 +425,8 @@ def job_action(identifier:str,action:str,who=Depends(identity)):
 
 @app.get('/api/jobs/{identifier}')
 def job_detail(identifier:str,who=Depends(identity)):
-    with scope(who) as db:
+    with scope(who,'leads.read') as db:
+        db.audit('research_job_read',identifier)
         return {'job':require(db,'search_jobs',identifier),'items':db.list('job_items',job_id=identifier),
                 'attempts':db.list('source_attempts',job_id=identifier)}
 
@@ -432,7 +435,7 @@ def job_detail(identifier:str,who=Depends(identity)):
 def opportunity_stage(identifier:str,value:s.StageInput,who=Depends(identity)):
     transitions={'new':['meeting','rfq','partner_review','lost'],'meeting':['rfq','partner_review','lost'],
         'rfq':['meeting','won','lost'],'partner_review':['meeting','won','lost'],'won':[],'lost':[]}
-    with scope(who,['sales','manager']) as db:
+    with scope(who,'crm.manage') as db:
         old=require(db,'opportunities',identifier,lock=True)
         if value.stage!=old['stage'] and value.stage not in transitions[old['stage']]:
             fail('Invalid opportunity stage transition')
@@ -443,7 +446,7 @@ def opportunity_stage(identifier:str,value:s.StageInput,who=Depends(identity)):
 
 @app.patch('/api/tasks/{identifier}')
 def task_assign(identifier:str,value:s.TaskInput,who=Depends(identity)):
-    with scope(who,['sales','manager']) as db:
+    with scope(who,'leads.assign') as db:
         old=require(db,'tasks',identifier,lock=True)
         row=db.put('tasks',{**old,**value.model_dump()})
         db.audit('task_assigned',identifier,value.reason)
@@ -454,7 +457,7 @@ def task_assign(identifier:str,value:s.TaskInput,who=Depends(identity)):
 def partner_change(identifier:str,value:s.PartnerInput,who=Depends(identity)):
     transitions={'application':['review','rejected'],'review':['approved','rejected'],
                  'approved':['activated','rejected'],'activated':[],'rejected':[]}
-    with scope(who,['manager']) as db:
+    with scope(who,'leads.review') as db:
         p=require(db,'partners',identifier,lock=True)
         a=require(db,'accounts',p['account_id'])
         if value.state!=p['state'] and value.state not in transitions[p['state']]:
@@ -481,7 +484,7 @@ def partner_change(identifier:str,value:s.PartnerInput,who=Depends(identity)):
 
 @app.get('/api/export')
 def export(format:str='json',who=Depends(identity)):
-    with scope(who,['manager','researcher']) as db:
+    with scope(who,'leads.export') as db:
         rows=[]
         for a in db.list('accounts'):
             evidence=[e for e in db.list('evidence',account_id=a['id']) if allowed_evidence(db,e,a,'export')]
@@ -512,8 +515,13 @@ def export(format:str='json',who=Depends(identity)):
 
 @app.delete('/api/accounts/{account_id}')
 def delete_account(account_id:str,who=Depends(identity)):
-    with scope(who,['compliance']) as db:
+    with scope(who,'leads.review') as db:
         require(db,'accounts',account_id,lock=True)
+        task_ids={t['id'] for t in db.list('tasks',account_id=account_id)}
+        for row in db.list('usage_ledger'):
+            if row.get('task_id')==account_id or row.get('task_id') in task_ids:
+                # Keep billable totals/idempotency while removing cached personal content.
+                db.put('usage_ledger',{**row,'result':None,'context_hash':None})
         db.conn.execute('DELETE FROM accounts WHERE tenant_id=%s AND id=%s',(db.tenant_id,account_id))
         db.audit('account_deleted',account_id,'Personal and research records removed; audit retains ID only')
         return {'deleted':True}
@@ -521,13 +529,14 @@ def delete_account(account_id:str,who=Depends(identity)):
 
 @app.get('/api/audit')
 def audit(who=Depends(identity)):
-    with scope(who,['compliance','manager']) as db:
+    with scope(who,'audit.read') as db:
         return db.list('audit_events')
 
 
 @app.get('/api/accounts/{account_id}/agent-result')
 def agent_result(account_id:str,who=Depends(identity)):
-    with scope(who) as db:
+    with scope(who,'research.analyze') as db:
+        db.audit('agent_account_read',account_id)
         a=require(db,'accounts',account_id)
         result=assess(db,a)
         facts,_=evidence_map(db,a)
@@ -551,6 +560,9 @@ def agent_result(account_id:str,who=Depends(identity)):
 @app.post('/api/webhooks/n8n')
 async def webhook(request:Request, x_nexa_timestamp:str=Header(default=''),
                   x_nexa_signature:str=Header(default=''),who=Depends(identity)):
+    authorize(who,'n8n.webhook')
+    if who['role']!='service': fail('Dedicated service identity required',403)
+    authorize(who,'research.start')
     raw=await request.body()
     if len(raw)>100000:
         fail('Webhook too large',413)
@@ -560,7 +572,8 @@ async def webhook(request:Request, x_nexa_timestamp:str=Header(default=''),
         fail('Invalid webhook timestamp',401)
     if abs(time.time()-stamp)>300:
         fail('Expired webhook',401)
-    secret=config()['webhook_secret']
+    secret=config().get('webhook_secrets',{}).get(who['user_id'])
+    if not secret: fail('Service webhook signature key is not configured',503)
     expected=hmac.new(secret.encode(),x_nexa_timestamp.encode()+b'.'+raw,hashlib.sha256).hexdigest()
     if not hmac.compare_digest(expected,x_nexa_signature):
         fail('Invalid webhook signature',401)
@@ -572,11 +585,15 @@ async def webhook(request:Request, x_nexa_timestamp:str=Header(default=''),
         job=s.JobInput.model_validate(payload['job'])
     except (ValueError,KeyError,TypeError):
         fail('Invalid webhook schema',422)
-    with scope(who,['researcher']) as db:
+    with scope(who,'n8n.webhook') as db:
         db.conn.execute('SELECT pg_advisory_xact_lock(hashtextextended(%s,0))',(db.tenant_id+':webhook:'+external_id,))
         if db.list('webhook_events',external_id=external_id):
             fail('Webhook replay rejected')
-        row=create_job(db,job.model_dump())
+        row=create_job(db,job.model_dump(),who=who)
         db.put('webhook_events',{'external_id':external_id,'job_id':row['id']})
         db.audit('n8n_webhook',row['id'])
         return row
+
+
+from .enterprise_api import router as enterprise_router
+app.include_router(enterprise_router)

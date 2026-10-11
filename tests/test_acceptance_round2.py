@@ -101,7 +101,7 @@ def test_reviewed_non_reply_fact_cannot_be_an_inbound_message(env,seed):
 
 def test_real_inbound_policy_can_be_reviewed_and_used(env,seed):
     account,evidence,text=inbound_evidence(env,seed,live=True)
-    response=env['client'].put('/api/policies/inbound_forms',headers=env['headers']['compliance'],json={
+    response=env['client'].put('/api/policies/inbound_forms',headers=env['headers']['admin'],json={
         'enabled':True,'terms_url':'https://policy.example/test-only','provenance_license':'TEST_ONLY',
         'purposes':['reply'],'expires_at':(utcnow()+timedelta(days=1)).isoformat(),
         'request_limit':5,'requests_per_minute':60,'cost_per_call':0,'reviewed_terms':True,
@@ -160,7 +160,7 @@ def test_qualified_account_cannot_approve_a_draft_with_invalid_citations(env,see
     # A newly reviewed outreach fact must be cited in a new revision before approval.
     with transaction(env['tenant']) as db:
         replacement=db.put('evidence',{**original,'id':None})
-    edited=env['client'].patch('/api/drafts/'+draft['id'],headers=env['headers']['sales'],json={
+    edited=env['client'].patch('/api/drafts/'+draft['id'],headers=env['headers']['manager'],json={
         'revision':1,'language':draft['language']})
     assert edited.status_code==200
     assert edited.json()['evidence_ids']==[replacement['id']]

@@ -1,5 +1,7 @@
 # 数据库 Schema
 
+V3.3 增量 DDL：[003_enterprise_control.sql](../db/003_enterprise_control.sql)。完整企业身份、权限、任务分配、用量账本及审批字段见 [V3.3 Schema](prd-v3.3.md#2-数据库-schema增量迁移-003)。新增表保持 FORCE RLS 和同租户复合外键；旧 users 角色规范化，不给历史员工自动开放客户或迁移管理 grants。tasks.owner_id 为权威负责人，旧 owner 仅是展示字段。work_assignments 是当前授权，work_notes 是工作记录，不是可跳过核验的 Evidence。
+
 完整可执行 DDL：[db/001_initial.sql](../db/001_initial.sql)。PostgreSQL 17；UTC timestamptz，ID 为应用生成 UUID 字符串；可演进领域属性存在 `data jsonb`，身份/租户/省份/状态/评分/幂等/引用为数据库约束列。后续迁移新增文件，不重写已有版本。
 
 [002_suppression_keys.sql](../db/002_suppression_keys.sql) 保留单向哈希的商业域名/注册号/外部ID抑制键；删除账户及联系资料后重新发现同一商业主体，仍不能绕过其拒绝联系。该表没有姓名、邮箱、电话或原始标识，保留用途仅限执行 opt-out；生产保留期限仍须合规确认。
@@ -37,6 +39,6 @@ Evidence JSON 契约：`fact_type, value, signal_type|null, event_date|null, raw
 - `service_capabilities`、`market_segments`、`business_models` 的 value 为受控标签列表或 null；标签来自 `backend/domain.py` 的 CAPABILITY_VALUES，指定画像条件来自 `config/hvac-qc-on.json` 的 profile_qualification。证据必须按现有流程独立核验才能满足条件。
 - 真实 `credential` value 必须明确包含 `status`、`province`、`work_class`，verified 还必须匹配 `authority`。例如字段形状为 `{"status":"verified","province":"QC","work_class":"<人工核实的实际类别>","authority":"RBQ"}`；此处仅示例 schema，不是任何真实客户的资格结论。
 - `not_required` 仍需官方来源、明确工作类别和人工核验的依据，不根据热泵行业推断豁免。DEMO 兼容裸 true；真实客户不接受裸 true 推断具体资质。
-- Account / Lead 的持久 state 仍作为最后一次评分记录。dashboard GET 返回最新资格状态及评分的只读投影，证据/来源到期不会延用旧的 qualified 展示；它不创建新审计事件或写评分。
+- Account / Lead 的持久 state 仍作为最后一次评分记录。dashboard GET 返回最新资格状态及评分的只读投影，证据/来源到期不会延用旧的 qualified 展示；V3.3 增加敏感读取审计，但不写评分。
 
 第二轮仍沿用 JSONB，无 DDL 迁移。`search_jobs.data.request_hash` 是规范化创建请求的 SHA-256，同幂等键不同请求返回 409；老任务从原有字段和按 ordinal 排序的 JobItem payload 核对。`source_policies.purposes` 显式允许 reply，但只有负责人启用并审核后才适用。`first_cooperation` 的 value 必须严格为 true，event_date 必须已发生且不晚于 observed_at，才能支持 activated；Unknown、申请、未来计划不能替代完成证明。草稿 approval 复查当前 evidence_ids 的 outreach 用途与事实支持，编辑清除 approved_revision 和旧 AI 建议。

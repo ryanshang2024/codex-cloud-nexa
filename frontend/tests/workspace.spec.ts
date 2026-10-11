@@ -1,8 +1,9 @@
 import {test,expect} from '@playwright/test';
+import {signIn} from './helpers';
 
 test('DEMO research → evidence → consent review → bilingual draft → approval → reply → CRM',async({page})=>{
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('/');await expect(page.getByRole('heading',{name:'让每一次连接，更有依据。'})).toBeVisible();
+ await signIn(page);await expect(page.getByRole('heading',{name:'让每一次连接，更有依据。'})).toBeVisible();
  await expect(page.getByText('正在连接工作台…',{exact:true})).toHaveCount(0);
  await page.screenshot({path:'../.local/workspace-desktop.png',fullPage:true});
  await page.getByRole('navigation').getByRole('button',{name:'客户研究'}).click();
@@ -37,7 +38,7 @@ test('DEMO research → evidence → consent review → bilingual draft → appr
 });
 
 test('mobile navigation, no horizontal viewport overflow, source authorization status',async({page})=>{
- await page.setViewportSize({width:390,height:844});await page.goto('/');
+ await page.setViewportSize({width:390,height:844});await signIn(page);
  await expect(page.getByRole('heading',{name:'让每一次连接，更有依据。'})).toBeVisible();
  await expect(page.getByText('正在连接工作台…',{exact:true})).toHaveCount(0);
  await page.screenshot({path:'../.local/workspace-mobile.png',fullPage:true});
@@ -64,7 +65,7 @@ test('workspace rejects cross-origin writes',async({request})=>{
 test('blocked draft review explains the evidence problem inside the open dialog',async({page})=>{
  await page.route('**/api/drafts/*/approve',route=>route.fulfill({status:409,contentType:'application/json',
   body:JSON.stringify({detail:{blocked_by:['draft_citations_invalid']}})}));
- await page.goto('/');
+ await signIn(page);
  await expect(page.getByText('正在连接工作台…',{exact:true})).toHaveCount(0);
  await page.getByRole('navigation').getByRole('button',{name:'客户研究'}).click();
  await page.getByRole('button',{name:'DEMO ON H06 HVAC 1',exact:true}).click();

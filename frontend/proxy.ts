@@ -8,7 +8,7 @@ function unavailable() {
   headers:{'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow'}});
 }
 
-// Private DEMO access only. This is not per-user production identity or RBAC.
+// Optional private-demo perimeter; every API still requires its own user session.
 export function proxy(request:NextRequest) {
  const mode=process.env.NEXA_WORKSPACE_MODE || 'private_demo';
  let host:string;
@@ -17,14 +17,16 @@ export function proxy(request:NextRequest) {
   try {if(loopback.has(new URL('http://'+request.headers.get('host')).hostname))return NextResponse.next()} catch {}
   return unavailable();
  }
- if(mode!=='private_demo')return unavailable();
+ if(mode!=='private_demo' && mode!=='saas')return unavailable();
  let origin:URL;
  try {origin=new URL(process.env.NEXA_WORKSPACE_ORIGIN || '')} catch {return unavailable()}
  const user=process.env.NEXA_DEMO_AUTH_USERNAME;
  const password=process.env.NEXA_DEMO_AUTH_PASSWORD;
  if(origin.protocol!=='https:' || loopback.has(origin.hostname) || origin.username || origin.password
-    || origin.pathname!=='/' || origin.search || origin.hash || !user || user.includes(':') || !password)return unavailable();
+    || origin.pathname!=='/' || origin.search || origin.hash)return unavailable();
  if(host!==origin.host)return NextResponse.json({detail:'Workspace hostname rejected'},{status:400,headers:{'Cache-Control':'no-store'}});
+ if(mode==='saas')return NextResponse.next();
+ if(!user || user.includes(':') || !password)return unavailable();
  const authorization=request.headers.get('authorization') || '';
  const expected=createHash('sha256').update(user+':'+password).digest();
  let authenticated=false;

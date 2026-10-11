@@ -13,7 +13,7 @@
 
 复用 Next.js Proxy 和标准 HTTP Basic Auth，为受邀人员访问 DEMO 提供临时保护；使用 Node crypto 定长摘要比较，覆盖页面、静态资源和全部 BFF API。没有登录凭据时返回 503，未登录/错误登录返回 401，不会获得后端共享 DEMO 身份。公开域名必须配置 HTTPS origin；BFF 校验规范化的同源地址，移除公开模式下 localhost 的例外。
 
-这是共享的演示访问控制，不是生产每用户身份、角色或会话系统。部署必须仅连接独立 DEMO 租户，保留虚构资料标识和 `.example` 地址，真实来源和模型默认关闭，全部发送仍为 423。真实客户模式仍需要生产身份、业务资料和独立验收，不能因发布 DEMO 而自动启用。
+V3.3 中 Basic 仅为可选的外层邀请保护，进入后仍须个人登录。BFF 移除共享管理员身份；超级管理员/经理和员工分别进入 Admin Console/Employee App，所有权限仍由 API 验证。支持 saas 模式直接使用个人登录（仍强制 HTTPS origin）。SSO/OIDC、MFA 及账号恢复尚未接入。部署必须仅连接独立 DEMO 租户，保留虚构资料标识和 `.example` 地址，真实来源和模型默认关闭，全部发送仍为 423。真实客户模式仍需要生产身份、业务资料和独立验收，不能因发布 DEMO 而自动启用。
 
 变量示例：[deploy/nexa-mk.env.example](../deploy/nexa-mk.env.example)。在选定主机/平台设置：
 
@@ -23,7 +23,7 @@
 | NEXA_WORKSPACE_ORIGIN | https://nexa-mk.voltwok.com，允许输入末尾斜线并规范化 |
 | NEXA_DEMO_AUTH_USERNAME / NEXA_DEMO_AUTH_PASSWORD | 部署平台秘密存储中的演示登录；用户名不含冒号，密码使用独立强随机值 |
 | NEXA_API_URL | 可达的私有 FastAPI 地址；不能把无保护的 API 或数据库端口直接公开 |
-| NEXA_API_TOKEN | 仅属于隔离 DEMO 租户的服务器凭据；不是浏览器变量 |
+| NEXA_API_TOKEN | V3.3 已移除，设置它不会赋予浏览器管理身份 |
 | NEXA_AI_ENABLED | false；不要为发布演示配置真实供应商调用 |
 
 `scripts/dev.py up` 仍绑定 loopback，并默认设置 local 模式；它是本地启动器，不是域名发布命令。公开服务由选定平台配置 private_demo，保留 API / worker / PostgreSQL 持久化与迁移，使用该平台的 HTTPS 入口。发布文件不包含 .local、.env.local、数据库、原始附件或凭据。网络配置和秘密由环境设置管理，不写入 Git。
@@ -32,6 +32,6 @@
 
 生产构建：`cd frontend && npm run build`。部署访问检查：`npm run test:e2e -- --config=playwright.deployment.config.ts`。它启动两个 loopback Next 实例，使用明确 TEST_ONLY 凭据和 Host 头测试目标域名配置，**不访问真实域名、不验证 DNS/真实 TLS、不构成线上部署**。
 
-修复前部署访问检查 4 failed / 1 passed：匿名、错误登录、缺配置仍能访问；公开写入仍接受 localhost Origin。修复后 5 passed。完整后台 PostgreSQL 与本地浏览器工作流也重新验证，精确结果见 [acceptance-evidence.json](acceptance-evidence.json)。
+修复前部署访问检查 4 failed / 1 passed：匿名、错误登录、缺配置仍能访问；公开写入仍接受 localhost Origin。V3.2 修复后 5 passed（历史结果，V3.3 需个人会话再次验证）。完整后台 PostgreSQL 与本地浏览器工作流也重新验证，精确结果见 [acceptance-evidence.json](acceptance-evidence.json)。
 
 实际发布需在平台身份和网络生效后完成：部署可恢复的应用/API/worker/数据库，配置目标子域名并取得可信 HTTPS 证书，验证未登录拒绝、登录工作流、同源写入、禁发和隔离 DEMO 数据。届时才记录 DNS、证书、源站版本和线上验收结果；当前这些步骤均 unrun。

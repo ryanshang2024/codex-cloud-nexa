@@ -106,7 +106,8 @@ def test_bilingual_approval_contact_basis_send_lock_revision(env,seed,province,l
     assert post(env,'drafts/'+draft['id']+'/approve',review,'sales').status_code==403
     assert post(env,'drafts/'+draft['id']+'/approve',review,'manager').status_code==200
     assert post(env,'drafts/'+draft['id']+'/send',{}).status_code==423
-    edit=env['client'].patch('/api/drafts/'+draft['id'],headers=env['headers']['sales'],json={'revision':1,'language':'en' if language=='fr' else 'fr'})
+    assert env['client'].patch('/api/drafts/'+draft['id'],headers=env['headers']['sales'],json={'revision':1,'language':'en' if language=='fr' else 'fr'}).status_code==403
+    edit=env['client'].patch('/api/drafts/'+draft['id'],headers=env['headers']['manager'],json={'revision':1,'language':'en' if language=='fr' else 'fr'})
     assert edit.status_code==200 and edit.json()['status']=='draft' and edit.json()['approved_by'] is None
     assert edit.json()['approved_revision'] is None
     assert post(env,'drafts/'+draft['id']+'/approve',review).status_code==409
@@ -213,14 +214,14 @@ def test_live_source_fallback_budget_and_disabled(env):
     with transaction(env['tenant']) as db:
         enable(db,'inbound_forms');enable(db,'government_registry')
         job=create_job(db,{'province':'QC','profile':'H09','mode':'live','idempotency_key':'fallback',
-            'items':[{'authorized_records':[{'name':'TEST_ONLY'}]}],'max_results':200,'call_budget':2,'cost_budget':1})
+            'items':[{'authorized_records':[{'name':'TEST_ONLY'}]}],'max_results':200,'call_budget':2,'cost_budget':1}, who={'tenant_id':env['tenant'],'user_id':env['tenant']+':admin'})
     assert process_one(env['tenant'],job['id'],fake)['status']=='completed'
     assert fake.calls==['inbound_forms','government_registry']
     with transaction(env['tenant']) as db:
         assert db.get('search_jobs',job['id'])['calls_used']==2
         assert len(db.list('accounts'))==0  # provider output not falsely promoted to verified CRM
         job=create_job(db,{'province':'QC','profile':'H09','mode':'live','idempotency_key':'budget',
-            'items':[{'authorized_records':[{'name':'TEST_ONLY'}]}],'max_results':200,'call_budget':0,'cost_budget':0})
+            'items':[{'authorized_records':[{'name':'TEST_ONLY'}]}],'max_results':200,'call_budget':0,'cost_budget':0}, who={'tenant_id':env['tenant'],'user_id':env['tenant']+':admin'})
     result=process_one(env['tenant'],job['id'],fake)
     assert result['status'] in ['budget_exhausted','failed']
     assert len(fake.calls)==2
@@ -259,7 +260,7 @@ def test_signed_webhook_expiry_replay(env):
     raw=json.dumps({'event_id':'event-1','job':{'province':'QC','profile':'H01','mode':'demo','idempotency_key':'webhook'}}).encode()
     stamp=str(int(time.time()))
     sig=hmac.new(env['cfg']['webhook_secret'].encode(),stamp.encode()+b'.'+raw,hashlib.sha256).hexdigest()
-    headers={**env['headers']['researcher'],'X-Nexa-Timestamp':stamp,'X-Nexa-Signature':sig,'Content-Type':'application/json'}
+    headers={**env['headers']['service'],'X-Nexa-Timestamp':stamp,'X-Nexa-Signature':sig,'Content-Type':'application/json'}
     c=env['client']
     assert c.post('/api/webhooks/n8n',headers={**headers,'X-Nexa-Signature':'wrong'},content=raw).status_code==401
     assert c.post('/api/webhooks/n8n',headers=headers,content=raw).status_code==200

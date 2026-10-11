@@ -5,3 +5,10 @@
 设计 token：NEXA Green #22C55E、Energy Green #10B981、Deep Space #0B1F38、Sky Blue #38BEFB、Mist Gray #E5E7EB、Cloud White #FAFBFC、Mint Glow #CFFADD、Forest #071A14。白底、薄荷焦点卡、深色数据、24px圆角、8/16/24/32间距。正文指定 Noto Sans / Noto Sans SC，离线系统缺字时使用系统回退；品牌字标用原图。按钮采用深色字配绿色底；状态同时给文本，不只依赖颜色；键盘焦点明显，触控目标至少44px，尊重 reduced-motion。
 
 字体通过 @fontsource/noto-sans 与 @fontsource/noto-sans-sc 5.3.0 离线打包，许可 OFL-1.1；不访问外部字体 CDN。所有演示数据明确显示 DEMO；图表与指标不能被称为真实业务结果。界面主流程保持业务语言，凭据/网络配置放在来源管理中。
+
+
+## V3.3 双端界面
+
+管理后台保留研究、画像、来源、线索审核、分配、CRM 和授权分析；企业管理集中设置个人功能权限、省份分析范围、模型价格、角色配额、企业预算和提额审批。员工端只显示我的任务、待跟进、授权工作助手和工作汇报。菜单之外，API 与 Agent Tool 都实施身份/记录/字段授权。
+
+实际浏览器截图：[Admin 管理工作台](previews/v3.3-admin-console.png)、[Employee AI 工作助手](previews/v3.3-employee-app.png)、[员工移动端](previews/v3.3-employee-mobile.png)。保留 NEXA 绿色/深蓝、低干扰卡片和清晰任务动作；示例客户使用 DEMO 标识。旧 V3.2 视频和画册不能证明 V3.3 权限或真实转化效果。

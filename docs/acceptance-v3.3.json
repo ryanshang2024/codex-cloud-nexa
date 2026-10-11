@@ -1,0 +1,54 @@
+{
+  "version": "3.3.0",
+  "verified_date_utc": "2026-10-11",
+  "scope": "development acceptance; not real provider/pilot/domain acceptance",
+  "backend": {
+    "tests": 163,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "browser": {
+    "passed": 6,
+    "failed": 0
+  },
+  "deployment_configuration": {
+    "passed": 6,
+    "failed": 0,
+    "real_dns_tls_verified": false
+  },
+  "typescript": "passed",
+  "production_build": "passed",
+  "draft_authorization_followup": "1 passed",
+  "demo": {
+    "real_provider_calls": 0,
+    "messages_sent": 0,
+    "QC_language": "fr",
+    "ON_language": "en",
+    "send_status": 423
+  },
+  "screenshots": [
+    {
+      "path": "docs/previews/v3.3-admin-console.png",
+      "sha256": "878898aaafd788acd57ff3b46b5477b4ef63bfa39f1ef142ea592fc1c08d6923"
+    },
+    {
+      "path": "docs/previews/v3.3-employee-app.png",
+      "sha256": "e0ab6a4e7d6ee5fb340eb80e098dd2200e5b589b12638f4c7530f4eb07a3656b"
+    },
+    {
+      "path": "docs/previews/v3.3-employee-mobile.png",
+      "sha256": "018ee0b313b29958c794771c0cfe70b7c97245deee50e656e572c8725706c53f"
+    }
+  ],
+  "unrun": [
+    "live provider and model billing integration",
+    "external voice provider",
+    "external PTT",
+    "SSO/OIDC/MFA/account recovery",
+    "50 real companies QC/ON pilot",
+    "public domain deployment/real TLS",
+    "production backup/recovery"
+  ],
+  "user_business_score_changed": false
+}

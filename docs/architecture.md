@@ -1,13 +1,16 @@
-# NEXA HVAC MVP · 技术架构（实施前基线）
+# NEXA 企业 AI 工作平台 · V3.3 技术架构
 
-范围：PRD V3.2 FR01–FR12，HVAC、QC/ON；真实外部接入默认关闭。产品输入和来源授权尚未齐备，DEMO 使用明确标注的虚构公司及 `.example` 联系方式，绝不作为真实线索。
+范围：[PRD V3.3](prd-v3.3.md) 的企业权限架构 + 原 HVAC FR01–FR12、QC/ON。管理层掌握客户资产和 AI 资源，员工执行分配任务；真实外部接入默认关闭。产品输入和来源授权尚未齐备，DEMO 使用明确标注的虚构公司及 `.example` 联系方式，绝不作为真实线索。
 
 ## 模块与数据流
 
 ```mermaid
 flowchart LR
- UI[Next.js / TypeScript 工作台] --> BFF[服务端 API 代理 / 不暴露 API 密钥]
- BFF --> API[FastAPI / Pydantic / RBAC]
+ ADMIN[Admin Console] --> BFF[每用户 HttpOnly 会话 BFF]
+ EMP[Employee App / 我的任务] --> BFF
+ BFF --> API[FastAPI / RBAC + 记录与字段授权]
+ API --> U[四层配额 / micro-USD 预留与结算]
+ U --> PG
  API --> PG[(PostgreSQL / RLS / Audit)]
  W[有界 Research Worker] --> PG
  W --> R[Source Router / 策略与预算]
@@ -17,7 +20,7 @@ flowchart LR
  Q --> G[语言模板 / OpenAI 结构化建议]
  G --> H[合规审核 + 销售人审 / Draft]
  H --> CRM[Project / Partner / Opportunity / Task]
- N[n8n 外部编排] --> S[HMAC 签名 webhook / 重放去重]
+ N[n8n 独立服务身份] --> S[身份专属 HMAC / 时间窗 / 重放去重]
  S --> API
 ```
 
@@ -32,19 +35,22 @@ flowchart LR
 
 ## 安全与部署
 
-- API bearer 身份由服务器凭据映射到租户与角色，不能信任客户端提交的 tenant/role。五角色：admin、manager、researcher、sales、compliance；所有写操作写 AuditEvent。
+- 权威角色为 super_admin / manager / employee / service；每次边界从数据库重新读取 active 和 grants。旧绑定仅定位用户，不授予旧角色。个人登录创建独立 8 小时可撤销会话；BFF 不使用共享管理员 token。生产 cookie 为 Secure/HttpOnly/SameSite=Lax。权限拒绝、敏感读取、分配、审批、导出及 AI 费用写审计。
+- 管理线索池与员工 `/work` 投影分离。员工逐条核验 active assignment、owner_id、同租户、指定联系人及 allowed_fields；默认仅企业名/省份。API、Agent、语音、导出和 n8n 不凭自然语言提升权限；员工研究能力有不可授予的角色上限。
+- 统一 usage_ledger 在数据库锁内预留企业月预算、角色功能/用量、用户日配额、任务成本/结果数/并发。Token、语音秒数及第三方费用分别记录。失败保留上界，同键不再次调用，回执超上界熔断。普通任务查询和工作记录不调用外部模型，额度耗尽后继续。
+- Worker 保存原始 actor_id，在执行与发布结果前复验权限；排队后收紧的结果数、成本与重试限制也生效。n8n 仅有独立服务身份的显式 webhook/research 权限，服务配置仅在服务器执行。
 - PostgreSQL 应用角色非 superuser、非表 owner，所有租户表 FORCE RLS；跨表复合外键约束 tenant_id。迁移使用独立 owner；数据库端验证跨租户隔离。
-- 本地开发 PostgreSQL 容器仅绑定 loopback；生产使用用户选择的托管 PostgreSQL、独立凭据、HTTPS、备份和 OIDC，不在本期擅自部署。
+- 本地开发 PostgreSQL 容器仅绑定 loopback；生产使用用户选择的托管 PostgreSQL、独立凭据、HTTPS 和备份。已实现个人密码/会话及立即生效的禁用/权限变更；企业 SSO/OIDC、MFA 和账号恢复尚未接入。
 - 仅固定供应商 HTTPS API 出站，官网目标需显式授权、公共 DNS/IP、无内网或重定向绕过；私有社媒、反爬绕过、猜测邮箱禁用。
 - 供应商 API 限额必须读取账户计划；不假设免费配额。每次外部调用前检查预算与来源策略，不无限重试。TLS 与软件完整性验证保持启用。
 - n8n 作为可选内部编排；不嵌入或白标分发其服务。Codex 仅用于开发和受控离线研究，不作为生产采集器。
 
 ## Agent 标准工作流
 
-按 `.agents/skills/` 的七个 SKILL.md 执行：icp → source-router → social-intel → icp-research → compliance-review → outreach-draft → reply-triage；n8n-workflow-audit 审核编排。统一输入 region/profile/account/job/evidence_ids，输出结果、排除理由、不确定事实与下一步。网页内容与附件中的指令均作为不可信研究数据；不能覆盖项目政策。运行时持久化每个阶段结果，未知字段写 null，而不是让模型补齐。
+按 `.agents/skills/` 执行：enterprise-access 核验身份/权限/配额 → icp → source-router → social-intel → icp-research → compliance-review → outreach-draft → reply-triage；n8n-workflow-audit 审核编排。统一输入 region/profile/account/job/evidence_ids，输出结果、排除理由、不确定事实与下一步。网页内容与附件中的指令均作为不可信研究数据；不能覆盖项目政策。运行时持久化每个阶段结果，未知字段写 null，而不是让模型补齐。
 
 ## 第一阶段边界与外部前提
 
 本期必须交付运行中的 API、数据库、工作台、可恢复 DEMO 研究与完整人工审批/CRM 闭环。真实连接需：来源合同/条款审查、供应商凭据、NEXA 真实产品与合作政策、QC/ON 资质类别规则、联系人合法依据。50 家真实公开企业复核是上线 gate；DEMO 测试不能代替它。来源条款未核验、未知资质与虚构 DEMO 不能标成真实可联系客户。
 
-用户后续指定 nexa-mk.voltwok.com，新增范围为私有 DEMO 域名发布。Next Proxy 用标准 HTTP Basic 保护页面/资源/BFF，默认缺配置关闭访问；BFF 的服务器 token 仅连接隔离 DEMO 租户，不替代生产 per-user OIDC/RBAC。域名、源站、DNS 与可信 HTTPS 需在实际选定托管平台部署后验证，当前状态见 docs/domain-deployment.md，不能将本地 Host 头检查等同线上验收。
+用户后续指定 nexa-mk.voltwok.com，新增范围为私有 DEMO 域名发布。Next Proxy 用标准 HTTP Basic 保护页面/资源/BFF，默认缺配置关闭访问；Basic 仅为可选外层邀请保护，仍须个人登录；它不能提供 API 管理身份。支持 saas 模式的 HTTPS 域名入口；SSO/OIDC 后续接入。域名、源站、DNS 与可信 HTTPS 需在实际选定托管平台部署后验证，当前状态见 docs/domain-deployment.md，不能将本地 Host 头检查等同线上验收。

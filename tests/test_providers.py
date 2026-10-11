@@ -48,7 +48,7 @@ def test_source_retries_rate_limit_and_quota(env):
     with transaction(env['tenant']) as db:
         policy=enable(db,'inbound_forms')
         job=create_job(db,{'province':'QC','profile':'H09','mode':'live','idempotency_key':'three-attempts',
-            'items':[{'authorized_records':[{}]}],'max_results':200,'call_budget':10,'cost_budget':10})
+            'items':[{'authorized_records':[{}]}],'max_results':200,'call_budget':10,'cost_budget':5}, who={'tenant_id':env['tenant'],'user_id':env['tenant']+':admin'})
     class Failure:
         def __init__(self):self.calls=0
         def call(self,*a):self.calls+=1;raise httpx.HTTPStatusError('limited',request=httpx.Request('POST','https://api.example'),response=httpx.Response(429))
@@ -69,7 +69,7 @@ def test_import_only_pending_business_records_result_cap(env):
     with transaction(env['tenant']) as db:
         enable(db,'inbound_forms')
         job=create_job(db,{'province':'QC','profile':'H09','mode':'live','idempotency_key':'canonical-import',
-            'items':[{'authorized_records':[{}]}],'max_results':1,'call_budget':2,'cost_budget':1})
+            'items':[{'authorized_records':[{}]}],'max_results':1,'call_budget':2,'cost_budget':1}, who={'tenant_id':env['tenant'],'user_id':env['tenant']+':admin'})
     class Import:
         def call(self,*a):return {'business_records':[
             {'account':{'name':'TEST RECORD not a real lead','province':'QC','profile':'H09','website':'https://test-company-1.public-domain.org'},

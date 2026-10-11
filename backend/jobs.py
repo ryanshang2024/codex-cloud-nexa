@@ -10,9 +10,14 @@ from fastapi import HTTPException
 from .db import record, transaction, utcnow
 from .domain import date, fail, ingest_account, require, score
 from .providers import Providers, demo_candidate, policy_ready, route
+from .access import principal
+from .usage import job_limits, reserve as reserve_usage, settle as settle_usage, micros, policy as usage_policy, limits as usage_limits
 
 
-def create_job(db, value):
+def create_job(db, value,who=None):
+    who=who or principal(db,db.actor)
+    if who['tenant_id']!=db.tenant_id: fail('Research tenant mismatch',403)
+    if 'research.start' not in principal(db,who['user_id'])['permissions']: fail('Research permission denied',403)
     # Pydantic defaults may retain integer 1 while an explicit budget is float 1.0.
     # Normalize the typed request so equivalent retry bodies share a fingerprint.
     value={**value,'cost_budget':float(value['cost_budget'])}
@@ -32,6 +37,7 @@ def create_job(db, value):
         if previous_hash!=request_hash:
             fail('Idempotency key already belongs to a different search request')
         return old[0]
+    lim=job_limits(db,who,value)
     items = value.get('items', [])
     if value['mode'] == 'demo':
         tenant = db.conn.execute('SELECT is_demo FROM tenants WHERE id=%s', (db.tenant_id,)).fetchone()
@@ -40,7 +46,7 @@ def create_job(db, value):
         items = [{'candidate': demo_candidate(value['province'], value['profile'], i)} for i in range(3)]
     if not items or len(items) > min(200, value['max_results']):
         fail('Job requires 1–200 items within max_results', 422)
-    data = {**value, 'request_hash':request_hash, 'items': None, 'status': 'queued', 'cursor': 0, 'calls_used': 0,
+    data = {**value, 'actor_id':who['user_id'],'max_retries':lim['max_retries'], 'request_hash':request_hash, 'items': None, 'status': 'queued', 'cursor': 0, 'calls_used': 0,
             'lease_until': None, 'next_attempt_at': None, 'results_count': 0}
     job = db.put('search_jobs', data)
     for i, item in enumerate(items):
@@ -92,11 +98,32 @@ def process_one(tenant_id, job_id=None, providers=None):
         if not row:
             return None
         job = record(row)
+        try:
+            actor=principal(db,job.get('actor_id',''))
+            if 'research.start' not in actor['permissions']: fail('Research authority revoked',403)
+            configured=usage_policy(db,lock=True); ceiling=usage_limits(db,actor,configured)
+            if (job['max_results']>ceiling['max_leads'] or micros(job['cost_budget'])>ceiling['max_task_cost_micros']
+                    or ceiling['job_concurrency']==0 or configured['concurrency']==0):
+                fail('Queued research exceeds current policy',429)
+        except HTTPException as exc:
+            db.put('search_jobs',{**job,'status':'paused','lease_until':None})
+            db.audit('job_limits_changed' if exc.status_code==429 else 'job_authority_revoked',job['id'])
+            return {'id':job['id'],'status':'paused'}
+        running=[j for j in db.list('search_jobs') if j['id']!=job['id'] and j['status']=='running' and j.get('lease_until') and date(j['lease_until'])>utcnow()]
+        if len(running)>=configured['concurrency'] or sum(j.get('actor_id')==actor['user_id'] for j in running)>=ceiling['job_concurrency']:
+            return None
         items = sorted([i for i in db.list('job_items', job_id=job['id']) if i['status'] == 'pending'], key=lambda x: x['ordinal'])
         if not items:
             db.put('search_jobs', {**job, 'status': 'completed', 'lease_until': None})
             return {'status': 'completed', 'id': job['id']}
         item = items[0]
+        # Reducing retry policy takes effect on queued/recovered work too.
+        job['max_retries']=min(job.get('max_retries',3),ceiling['max_retries'])
+        if item.get('tries',0)>=max(1,job['max_retries']):
+            db.put('job_items',{**item,'status':'failed','error':'retry_limit'})
+            db.put('search_jobs',{**job,'status':'failed','lease_until':None})
+            db.audit('job_retry_limit',job['id'])
+            return {'id':job['id'],'status':'failed'}
         lease = utcnow() + timedelta(seconds=120)
         job = db.put('search_jobs', {**job, 'status': 'running', 'lease_until': lease})
     result, attempts, error = None, [], None
@@ -126,6 +153,19 @@ def process_one(tenant_id, job_id=None, providers=None):
                         attempts.append((p['provider'], 'quota_exhausted', 'policy_request_limit', 0)); continue
                     if policy.get('next_call_at') and date(policy['next_call_at']) > utcnow():
                         error = 'rate_limited'; continue
+                    try: actor=principal(db,job['actor_id'])
+                    except HTTPException:
+                        error='authority_revoked'; break
+                    if 'research.start' not in actor['permissions']:
+                        error='authority_revoked'; break
+                    try:
+                        reservation=reserve_usage(db,actor,'source:'+job['id']+':'+str(item['ordinal'])+':'+str(current['calls_used']),
+                            'source:'+p['provider'],cost_micros=micros(cost),source_calls=1,task_id=job['id'])
+                    except HTTPException as exc:
+                        if exc.status_code not in [401,403,429]: raise
+                        error='authority_revoked' if exc.status_code in [401,403] else 'budget_exhausted'; break
+                    if reservation.get('replayed'):
+                        error='budget_exhausted'; break
                     db.put('search_jobs', {**current, 'calls_used': current['calls_used'] + 1,
                         'cost_used': current.get('cost_used', 0) + cost})
                     db.put('source_policies', {**policy, 'requests_used': policy.get('requests_used', 0) + 1,
@@ -141,6 +181,9 @@ def process_one(tenant_id, job_id=None, providers=None):
                         code = exc.response.status_code
                     attempts.append((p['provider'], 'failed', f'provider_error:{code or type(exc).__name__}', cost))
                     error = 'provider_failed'
+                finally:
+                    with transaction(tenant_id,'worker') as meter:
+                        settle_usage(meter,reservation['id'],failed=result is None)
         finally:
             if own:
                 client.close()
@@ -151,6 +194,17 @@ def process_one(tenant_id, job_id=None, providers=None):
         # A recovered worker owns a different lease: stale responses cannot overwrite it.
         if current['lease_until'] != lease:
             return {'id': job['id'], 'status': current['status'], 'stale_lease': True}
+        # Do not publish provider results after the originating user's authority was removed.
+        try:
+            current_actor=principal(db,job['actor_id'])
+            if 'research.start' not in current_actor['permissions']: fail('Research authority revoked',403)
+            current_limits=usage_limits(db,current_actor,usage_policy(db,lock=True))
+            if job['max_results']>current_limits['max_leads'] or micros(job['cost_budget'])>current_limits['max_task_cost_micros']:
+                fail('Research policy tightened during provider call',429)
+        except HTTPException:
+            db.put('search_jobs',{**current,'status':'paused','lease_until':None})
+            db.audit('job_authority_revoked',job['id'],'Provider response withheld')
+            return {'id':job['id'],'status':'paused'}
         for provider, status, reason, cost in attempts:
             db.put('source_attempts', {'job_id': job['id'], 'provider': provider, 'status': status, 'error': reason, 'cost': cost})
         tries = item.get('tries', 0) + (0 if error == 'rate_limited' else 1)
@@ -176,7 +230,7 @@ def process_one(tenant_id, job_id=None, providers=None):
             current.update(cursor=item['ordinal'] + 1, results_count=min(job['max_results'],current.get('results_count', 0) + count),
                            next_attempt_at=None, lease_until=None)
         else:
-            final = tries >= 3 or error in ['no_authorized_source', 'budget_exhausted']
+            final = tries >= job.get('max_retries',3) or error in ['no_authorized_source', 'budget_exhausted','authority_revoked']
             db.put('job_items', {**item, 'status': 'failed' if final else 'pending', 'tries': tries, 'error': error})
             current.update(lease_until=None, next_attempt_at=None if final else utcnow() + timedelta(seconds=60 if error=='rate_limited' else min(60, 2 ** tries)))
             if error == 'budget_exhausted':

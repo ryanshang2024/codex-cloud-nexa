@@ -1,6 +1,10 @@
-# NEXA AI Sales Engine · HVAC MVP V3.2
+# NEXA Enterprise AI Work Platform · HVAC V3.3
 
-QC / ON、H01–H10、证据评分、可恢复研究、双语草稿人审、回复分类与 CRM。工作台按用户提供的 NEXA VI 设计。
+Admin Console 统一管理 QC/ON、H01–H10、研究、客户资产与 AI 预算；Employee App 仅执行分配任务和授权助手。服务端 RBAC、字段/记录授权、集中费用预留与审计覆盖 API、Agent、n8n 和导出。界面使用 NEXA VI。
+
+- [V3.3 权限矩阵、Schema、API、计费及旅程](docs/prd-v3.3.md)
+- [Work Assistant PRD](docs/prd-work-assistant-v3.3.md) / [Sales Engine PRD](docs/prd-sales-engine-v3.3.md)
+- [V3.3 开发验收与使用说明](docs/validation-v3.3.md)
 
 **当前可运行范围：本地 DEMO + 受策略保护的 API 接口。没有自动营销发送器。真实供应商未接入，DEMO 企业、邮箱、资质、同意和回复都是虚构数据。**
 
@@ -29,9 +33,11 @@ cd ..
 .venv/bin/python scripts/dev.py up
 ```
 
-`init` 生成 ignored `.local/` 中的开发凭据，以固定 digest 的 PostgreSQL 17 官方容器启动数据库，应用迁移、非超级用户角色、FORCE RLS，并初始化三个租户。数据库仅绑定本机，数据 bind mount 在 `.local/pgdata`。`up` 启动 API、研究 worker 和 Next.js，并实际检查 API/页面响应。端口为 API 8000、工作台 3000、数据库 54329；都只绑定 loopback。不要将 BFF 的共享 DEMO 身份公开到 Internet。
+`init` 在 ignored `.local/` 生成本地凭据，以固定 digest 的 PostgreSQL 17 官方容器启动数据库，增量迁移至 003，初始化非超级用户应用身份、FORCE RLS 和三个租户。数据库只绑定本机，数据在 `.local/pgdata`。`up` 启动 API、worker、Next.js 并检查响应。端口为 API 8000、工作台 3000、数据库 54329；均为 loopback。本地入口 http://127.0.0.1:3000/，使用个人账号登录后按真实权限进入 `/admin` 或 `/employee`。
 
-开发时可用 `.venv/bin/python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000 --reload` 和 `npm run dev` 替代对应服务。API 密钥不下发浏览器。`.local/tokens.json` 保存每租户每角色的本地 bearer，禁止打印/提交或发到聊天；frontend/.env.local 仅选择 DEMO 管理员。生产登录需要接 OIDC 与每用户会话；本期没有部署生产登录。
+开发时可用 `.venv/bin/python -m uvicorn backend.app:app --host 127.0.0.1 --port 8000 --reload` 和 `npm run dev`。首次初始化的个人账号及随机密码仅保存在 `.local/demo-logins.json`（600 权限）；在工作区私下取用，禁止打印到聊天/日志或提交。`nexa-demo:admin` 是管理员，`nexa-demo:sales` 是员工；新用户由管理端创建。浏览器 BFF 只使用本人的 HttpOnly 会话，忽略旧 NEXA_API_TOKEN。旧 `.local/tokens.json` 仅用于内部开发 API，角色仍从数据库读取。已实现个人密码与会话；生产 SSO/OIDC、MFA、恢复及 HTTPS 运维另需配置。
+
+n8n 凭据仅保存在服务器 `.local/service-identities.json`，默认无权限。服务器负责人可运行 `.venv/bin/python scripts/service_identity.py <tenant> enable`，仅赋予独立服务 webhook/research；`disable` 撤销。签名、重放和研究任务限额仍执行。该文件绝不能交给员工浏览器或提交。
 
 ## 测试与演示
 
@@ -73,7 +79,7 @@ npm run test:e2e
 
 1. 参考页面被当前代理策略拦截：n8n #13513/#6091/#17051、OpenAI Academy、Google policy。所需域名已加入环境草稿，需用户在环境设置保存并发布后重查；未拿到 JSON 不能声称工作流代码审查完成。Lead-Researcher 源码审查已完成，但独立 LICENSE 缺失，未复制代码或运行其 installer/loop。
 2. 真正接入时，在环境设置安全配置 `GOOGLE_PLACES_API_KEY`、`FIRECRAWL_API_KEY`、`APIFY_API_TOKEN`、`NEXA_OPENAI_API_KEY`。不要在聊天输入值。每个来源另行确认 Terms、许可、配额、缓存/导出目的并通过 SourcePolicy 合规人审。Apify Actor 许可不由 SDK Apache 许可代替。
-3. OpenAI 还需显式设置 `NEXA_AI_ENABLED=true` 与启用经人审的 `openai` SourcePolicy（用途 `draft`、到期时间、总调用上限与每分钟限速）；配额在付费调用前提交，失败也占用配额。模型默认 `gpt-4.1-mini`，须按实际可用模型复核。DEMO 不调用付费 API。
+3. OpenAI 需服务端 `NEXA_AI_ENABLED=true`、凭据、已审 `openai` SourcePolicy，以及管理端启用模型/已核对价格。四层账本在付费调用前预留，失败保留上界；模型/来源费用共享企业月预算，回执超预留自动熔断。模型默认 `gpt-4.1-mini`，按实际供应商价目/可用性复核。DEMO 不调用付费 API。语音费用策略已定义，但语音供应商尚未接入；PTT 外部回写也未连接。
 4. NEXA 的实际公司/品牌、产品与合作政策、CASL 依据、RBQ/STO/TSSA 工作类别规则和隐私保留期限尚待业务/合规输入。Sender identity 当前是待补占位，审批仅是草稿审阅，不能发送。
 5. 50 家真实企业人工抽样、QC/ON 各两城试点尚未执行；DEMO 与 mock 测试不能替代。生产 OIDC、来源合同、监控、备份/恢复与真实模型质量另需上线验收。
 

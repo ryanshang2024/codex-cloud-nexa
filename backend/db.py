@@ -27,9 +27,13 @@ COLUMNS = {
     'consent_records': ['account_id', 'contact_id', 'status'],
     'outreach_drafts': ['account_id', 'contact_id', 'status', 'revision', 'language'],
     'interactions': ['account_id', 'external_id', 'category'],
-    'opportunities': ['account_id', 'stage'], 'tasks': ['account_id', 'status'],
+    'opportunities': ['account_id', 'stage'], 'tasks': ['account_id', 'status','owner_id'],
     'suppressions': ['account_id'], 'audit_events': [], 'webhook_events': ['external_id'],
     'suppression_keys': ['kind','digest'],
+    'auth_sessions':['user_id','token_hash','expires_at','revoked'],
+    'user_grants':['user_id','permission'], 'work_assignments':['account_id','task_id','user_id','contact_id','status'],
+    'work_notes':['task_id','user_id'], 'ai_policies':[], 'user_quotas':['user_id'],
+    'usage_ledger':['user_id','idempotency_key','state','reserved_until'], 'quota_requests':['user_id','status'],
 }
 
 
