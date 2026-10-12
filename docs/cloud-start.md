@@ -1,4 +1,6 @@
 # Start the NEXA HVAC MVP
+
+The public root now introduces Employee App; individual login is /login, installed app start is /employee. Verify root and /login render, anonymous BFF remains 401, and /manifest.webmanifest plus /work-assistant-sw.js are available. Install support is optional and must not replace session/RBAC checks. No customer data is stored by the navigation worker.
 Use the existing isolated checkout at /workspace/codex-cloud-nexa. Do not create a Git worktree unless the user explicitly requests one.
 Read AGENTS.md, docs/architecture.md, docs/acceptance.md, docs/agent-workflow.md, and the relevant project .agents/skills/*/SKILL.md.
 

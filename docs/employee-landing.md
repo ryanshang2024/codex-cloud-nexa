@@ -1,0 +1,42 @@
+# Employee App 项目介绍与安装入口
+
+NEXA AI Work Assistant 现在有独立的对外介绍页面，连接项目介绍、个人登录及可安装网页版 App。页面沿用 NEXA VI，不展示真实/虚构客户记录、不读取客户接口，不宣传未经验证的转化率、自动营销发送或尚未接入的语音服务。
+
+## 访问与使用
+
+| 路径 | 用途 |
+| --- | --- |
+| `/` 或 `/work-assistant` | 项目介绍、四项员工能力、使用流程、企业/员工分工、常见问题及安装区 |
+| `/login` | 个人企业账号登录；已登录用户按服务端实际权限进入管理端或员工端 |
+| `/employee` | 员工工作端；未登录跳转 `/login`，任务与字段仍受服务端授权 |
+| `/admin` | 管理端；普通员工访问仍跳转自己的工作端 |
+| `/manifest.webmanifest` | 真实 App 名称、图标、独立窗口及 `/employee` 启动入口 |
+| `/app-icons/192`、`/app-icons/512` | 从现有 NEXA 标识渲染的实际 192/512 PNG 安装图标 |
+| `/work-assistant-sw.js` | 网络优先且不写缓存的导航 Worker；断网仅显示通用重连提示 |
+
+下载入口采用 **PWA 可安装网页版**。浏览器提供安装事件时，“安装 NEXA App”启动浏览器真实安装确认；不支持/尚未提供事件时显示设备指引。取消、请求提交与已安装分别提示，不以点击按钮冒充安装成功。
+
+- 电脑 Chrome/Edge：安装按钮或浏览器地址栏的安装入口。
+- Android Chrome：安装按钮，或浏览器菜单的安装/添加到主屏幕。
+- iPhone/iPad：Safari → 共享 → 添加到主屏幕。
+- 登录需要企业管理员创建的个人账号；安装不会获得更多权限。
+
+当前没有发布 APK、IPA 或应用商店包，因此页面没有虚构安装包、商店链接或二维码。若后续有正式原生 App，可接入已验证的包/商店地址。安装兼容性依赖浏览器版本；线上安装需要有效 HTTPS 与可达的应用服务。
+
+## 公开页面与数据边界
+
+SaaS 部署设置 `NEXA_WORKSPACE_MODE=saas` 和实际 HTTPS `NEXA_WORKSPACE_ORIGIN`，介绍与个人登录可访问；API、SSR 工作端仍验证个人会话和权限。API/数据库保持私有，保留 V3.3 的服务端 RBAC、记录/字段授权与预算控制。
+
+`private_demo` 模式保留 App、登录和 API 的邀请 Basic 外层。仅对以下内容开放精确白名单：介绍页、manifest、Worker、两张 NEXA 品牌图、192/512 图标及 `/_next/static/` 静态资源。未配置邀请密码时工作端/接口仍 503；介绍与安装资源不提供任何管理身份。未知路径不会因类似命名而开放。真实域名仍须验证 Host/HTTPS，与本地配置测试分开。
+
+Worker 不缓存页面、任务、API、联系人、凭据或回复，不建立离线写入队列。断网后不显示旧客户资料，也不声称结果已保存；恢复网络后重新经过登录及权限检查。普通浏览器的公开字体/标识缓存不包含业务信息。
+
+## 验证记录
+
+2026-10-12 UTC：TypeScript / production build 通过；Chromium 浏览器旅程 **11 passed**（原双端流程 + 5 项介绍/安装/网络与权限用例）；部署配置 **7 passed**；后台 V3.3 权限及计费回归 **39 passed**。原始日志及失败追踪留在 ignored `.local/` / `test-results/`，不公开凭据。
+
+浏览器验证覆盖：介绍页不请求私人 API、登录入口、390/320 宽度布局、安装指引键盘切换、有效 manifest 与 PNG 尺寸、真实 Worker 注册、员工接口越权拒绝、断网无客户缓存、恢复网络及退出登录。安装接受/取消状态使用浏览器事件替身测试；实际 iPhone/Android 硬件安装和已部署公网 HTTPS 尚未实测。
+
+界面截图：[桌面首页](previews/employee-landing-hero.png)、[完整介绍页](previews/employee-landing-desktop.png)、[手机介绍页](previews/employee-landing-mobile.png)。页面实现见 [EmployeeLanding](../frontend/components/EmployeeLanding.tsx) 与 [InstallApp](../frontend/components/InstallApp.tsx)。
+
+最后字体调整后的 5 项介绍/安装/权限用例再次通过，最新截图使用调整后的字号。[脱敏验收证据](employee-landing-evidence.json) 记录实际测试范围、图标及 Worker 状态、设备宽度、截图摘要与尚未实测的安装场景。

@@ -1,0 +1,67 @@
+{
+  "date_utc": "2026-10-12",
+  "scope": "employee landing/login/installed web app; local development validation",
+  "production_build": "passed",
+  "typescript": "passed",
+  "full_browser_journeys": {
+    "passed": 11,
+    "failed": 0
+  },
+  "landing_final_visual_and_functional": {
+    "passed": 5,
+    "failed": 0
+  },
+  "deployment_configuration": {
+    "passed": 7,
+    "failed": 0,
+    "real_domain_deployed": false
+  },
+  "backend_security_regression": {
+    "passed": 39,
+    "failed": 0
+  },
+  "pwa": {
+    "manifest_parses_in_chromium": true,
+    "png_icon_sizes": [
+      192,
+      512
+    ],
+    "worker_registers": true,
+    "caches_customer_data": false,
+    "offline_returns_generic_reconnect_page": true,
+    "native_packages_published": false,
+    "installation_prompt_states_use_test_events": true
+  },
+  "viewports": [
+    {
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "width": 390,
+      "height": 844
+    },
+    {
+      "width": 320,
+      "height": 740
+    }
+  ],
+  "unrun": [
+    "iOS/Android physical-device installation",
+    "deployed public HTTPS origin"
+  ],
+  "screenshots": [
+    {
+      "path": "docs/previews/employee-landing-hero.png",
+      "sha256": "31a598b82c1e253cceba11f067af78784ea8f44ae751c76710b751330d9a6fd4"
+    },
+    {
+      "path": "docs/previews/employee-landing-desktop.png",
+      "sha256": "c9c3aac9cca9ecea214b33a7d9ccb582272fadeaf2f5813595fa0b3a156fdc94"
+    },
+    {
+      "path": "docs/previews/employee-landing-mobile.png",
+      "sha256": "3f762c10ccd790d3c3183ac23201a4600668e38b3b8df106411dab0ccb7593dd"
+    }
+  ]
+}

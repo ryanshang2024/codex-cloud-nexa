@@ -5,7 +5,7 @@ export async function signIn(page:Page,role='admin'){
  const logins=JSON.parse(readFileSync(resolve(process.cwd(),'../.local/demo-logins.json'),'utf8'));
  const credential=logins['nexa-demo:'+role];
  if(!credential)throw new Error('Local personal test account not initialized; run reviewed setup.');
- await page.goto('/');
+ await page.goto('/login');
  await page.getByLabel('企业空间',{exact:true}).fill(credential.tenant_id);
  await page.getByLabel('账号',{exact:true}).fill(credential.user_id);
  await page.getByLabel('密码',{exact:true}).fill(credential.password);

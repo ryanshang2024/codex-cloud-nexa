@@ -13,8 +13,8 @@ async function personalHeaders(request:APIRequestContext){
  return {Host:domain,Authorization:authorization,Cookie:cookie.split(';')[0]};
 }
 
-test('public workspace and every administrative route reject anonymous access',async({request})=>{
- for(const path of ['/','/api/dashboard','/nexa-logo.png']){
+test('employee/admin/login and APIs keep private-demo invitation protection',async({request})=>{
+ for(const path of ['/login','/employee','/admin','/api/dashboard','/api/work/dashboard']){
   const response=await request.get(base+path,{headers:{Host:domain}});
   expect(response.status()).toBe(401);
   expect(response.headers()['www-authenticate']).toContain('Basic');
@@ -59,9 +59,20 @@ test('public writes reject the local-development Origin exception and foreign Or
 });
 
 test('production defaults deny publication when access credentials are missing',async({request})=>{
- for(const path of ['/','/api/dashboard']){
+ for(const path of ['/login','/employee','/admin','/api/dashboard']){
   const response=await request.get('http://127.0.0.1:3012'+path,{headers:{Host:domain}});
   expect(response.status()).toBe(503);
+ }
+});
+
+test('project landing and exact installation assets are public while app data stays protected',async({request})=>{
+ for(const port of [3011,3012]){
+  const url='http://127.0.0.1:'+port;
+  for(const path of ['/','/work-assistant','/manifest.webmanifest','/work-assistant-sw.js','/nexa-logo.png','/nexa-symbol.png','/app-icons/192','/app-icons/512']){
+   const response=await request.get(url+path,{headers:{Host:domain}});expect(response.status()).toBe(200);
+  }
+  expect((await request.get(url+'/api/export',{headers:{Host:domain}})).status()).toBe(port===3011?401:503);
+  expect((await request.get(url+'/work-assistant-admin',{headers:{Host:domain}})).status()).toBe(port===3011?401:503);
  }
 });
 

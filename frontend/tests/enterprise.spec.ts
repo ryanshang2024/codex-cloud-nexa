@@ -94,6 +94,7 @@ test('anonymous BFF has no admin token fallback; employee mobile layout is bound
  const cookie=(await page.context().cookies()).find(c=>c.name==='nexa_session');
  expect(cookie?.httpOnly).toBe(true);expect(cookie?.sameSite).toBe('Lax');
  await page.getByRole('button',{name:'退出登录'}).click();
- await expect(page.getByRole('heading',{name:'登录企业工作空间'})).toBeVisible();
+ await expect(page).toHaveURL(/\/$/);
+ await expect(page.getByRole('heading',{level:1})).toHaveText('让每一份工作，清晰向前。');
  expect((await page.request.get('/api/work/dashboard')).status()).toBe(401);
 });

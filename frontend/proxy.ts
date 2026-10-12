@@ -26,6 +26,10 @@ export function proxy(request:NextRequest) {
     || origin.pathname!=='/' || origin.search || origin.hash)return unavailable();
  if(host!==origin.host)return NextResponse.json({detail:'Workspace hostname rejected'},{status:400,headers:{'Cache-Control':'no-store'}});
  if(mode==='saas')return NextResponse.next();
+ // Public product content/install assets contain no identity or customer data.
+ const path=request.nextUrl.pathname;
+ const publicPage=['/','/work-assistant','/manifest.webmanifest','/work-assistant-sw.js','/nexa-logo.png','/nexa-symbol.png'].includes(path);
+ if(publicPage||/^\/app-icons\/(192|512)$/.test(path)||path.startsWith('/_next/static/'))return NextResponse.next();
  if(!user || user.includes(':') || !password)return unavailable();
  const authorization=request.headers.get('authorization') || '';
  const expected=createHash('sha256').update(user+':'+password).digest();

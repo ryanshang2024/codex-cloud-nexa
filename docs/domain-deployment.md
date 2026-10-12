@@ -1,5 +1,7 @@
 # nexa-mk.voltwok.com 私有 DEMO 发布准备
 
+2026-10-12：新增 Employee 公开介绍页与 PWA 安装资源；`private_demo` 下仅介绍与静态安装资源免邀请认证，`/login`、App 和 API 保留原外层保护。正式企业公开入口可用 `saas` 模式并配置真实 HTTPS origin，仍执行个人会话/服务端权限。安装与域名状态见 [Employee 页面说明](employee-landing.md)。源码中的页面可运行不代表此域名已经部署。
+
 用户指定目标：`https://nexa-mk.voltwok.com/`。**目前尚未部署到该域名。** 已准备和验证访问保护与域名变量；现有 GitHub main 仅是源码发布，不能代替运行服务器、DNS 或 HTTPS。
 
 ## 当前阻塞与检查结果

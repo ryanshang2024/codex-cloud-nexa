@@ -5,6 +5,7 @@ Admin Console 统一管理 QC/ON、H01–H10、研究、客户资产与 AI 预�
 - [V3.3 权限矩阵、Schema、API、计费及旅程](docs/prd-v3.3.md)
 - [Work Assistant PRD](docs/prd-work-assistant-v3.3.md) / [Sales Engine PRD](docs/prd-sales-engine-v3.3.md)
 - [V3.3 开发验收与使用说明](docs/validation-v3.3.md)
+- [Employee 项目介绍页、个人登录及 App 安装](docs/employee-landing.md)：`/` / `/work-assistant` 为介绍页，`/login` 登录，`/employee` 为授权工作端；下载入口提供可安装网页版 App。
 
 **当前可运行范围：本地 DEMO + 受策略保护的 API 接口。没有自动营销发送器。真实供应商未接入，DEMO 企业、邮箱、资质、同意和回复都是虚构数据。**
 
