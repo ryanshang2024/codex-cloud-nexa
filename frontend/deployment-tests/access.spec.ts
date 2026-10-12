@@ -73,6 +73,11 @@ test('project landing and exact installation assets are public while app data st
   }
   expect((await request.get(url+'/api/export',{headers:{Host:domain}})).status()).toBe(port===3011?401:503);
   expect((await request.get(url+'/work-assistant-admin',{headers:{Host:domain}})).status()).toBe(port===3011?401:503);
+  const clip=await request.get(url+'/nexa-hero-forest.mp4',{headers:{Host:domain,Range:'bytes=0-63'}});
+  expect(clip.status()).toBe(206);expect(clip.headers()['content-type']).toContain('video/mp4');
+  expect(clip.headers()['content-range']).toMatch(/^bytes 0-63\/[0-9]+$/);
+  expect((await clip.body()).length).toBe(64);
+  expect((await request.get(url+'/nexa-hero-forest.mp4/private',{headers:{Host:domain}})).status()).toBe(port===3011?401:503);
  }
 });
 

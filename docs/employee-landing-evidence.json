@@ -1,24 +1,78 @@
 {
   "date_utc": "2026-10-12",
-  "scope": "employee landing/login/installed web app; local development validation",
+  "scope": "NEXA Energy reference alignment, employee overview and actual forest/birds hero media; local production validation",
   "production_build": "passed",
   "typescript": "passed",
   "full_browser_journeys": {
-    "passed": 11,
+    "passed": 13,
     "failed": 0
   },
   "landing_final_visual_and_functional": {
-    "passed": 5,
+    "passed": 7,
     "failed": 0
   },
   "deployment_configuration": {
     "passed": 7,
     "failed": 0,
-    "real_domain_deployed": false
+    "real_domain_deployed": false,
+    "public_media_byte_range_status": 206,
+    "public_media_byte_range_length": 64,
+    "lookalike_media_path_protected": true
   },
   "backend_security_regression": {
     "passed": 39,
     "failed": 0
+  },
+  "design_reference": {
+    "url": "https://nexa-energy.voltwok.com/#overview",
+    "html_css_and_animation_source_reviewed": true,
+    "capture_method": "Downloaded reference HTML/styles rendered locally; production employee page captured with actual media."
+  },
+  "hero_motion": {
+    "original_url": "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260319_015952_e1deeb12-8fb7-4071-a42a-60779fc64ab6.mp4",
+    "original_sha256": "f484658029e8b125f176f69ef246541160695cdf297db15986344f32caa789b9",
+    "original_bytes": 18464460,
+    "local_asset": "frontend/public/nexa-hero-forest.mp4",
+    "local_sha256": "3ed2fc88da92b269bea78558892efbd5043e4b97cf37827c14168d0f61bc2c90",
+    "local_bytes": 5838513,
+    "width": 1920,
+    "height": 1080,
+    "fps": 24,
+    "duration_seconds": 8,
+    "audio": false,
+    "actual_media_playback_verified_in_chromium": true,
+    "third_party_requests_on_product_page": [],
+    "pause_resume_and_offscreen_pause_tested": true,
+    "initial_and_dynamic_reduced_motion_tested": true,
+    "media_failure_keeps_content_and_login_usable": true,
+    "lifecycle_tests_use_self_generated_green_clip": true,
+    "new_runtime_dependencies": [],
+    "entrance_timings_seconds": {
+      "badge": {
+        "delay": 0,
+        "duration": 0.5
+      },
+      "eyebrow": {
+        "delay": 0.1,
+        "duration": 0.6
+      },
+      "heading": {
+        "delay": 0.16,
+        "duration": 0.6
+      },
+      "description": {
+        "delay": 0.2,
+        "duration": 0.6
+      },
+      "actions": {
+        "delay": 0.3,
+        "duration": 0.6
+      },
+      "dashboard": {
+        "delay": 0.5,
+        "duration": 0.8
+      }
+    }
   },
   "pwa": {
     "manifest_parses_in_chromium": true,
@@ -32,19 +86,14 @@
     "native_packages_published": false,
     "installation_prompt_states_use_test_events": true
   },
-  "viewports": [
-    {
-      "width": 1280,
-      "height": 900
-    },
-    {
-      "width": 390,
-      "height": 844
-    },
-    {
-      "width": 320,
-      "height": 740
-    }
+  "viewport_widths_without_horizontal_overflow": [
+    320,
+    390,
+    600,
+    820,
+    1024,
+    1280,
+    1440
   ],
   "unrun": [
     "iOS/Android physical-device installation",
@@ -53,15 +102,19 @@
   "screenshots": [
     {
       "path": "docs/previews/employee-landing-hero.png",
-      "sha256": "31a598b82c1e253cceba11f067af78784ea8f44ae751c76710b751330d9a6fd4"
+      "sha256": "9794305b42a21dda43e3284f3166634f525c0b3ae092fc2ca2ef49b943e2ee62"
     },
     {
       "path": "docs/previews/employee-landing-desktop.png",
-      "sha256": "c9c3aac9cca9ecea214b33a7d9ccb582272fadeaf2f5813595fa0b3a156fdc94"
+      "sha256": "fab7ec0af9451de1cd50fdfc36d0608f70c6220eac185e004d0fc71eb2a90d21"
     },
     {
       "path": "docs/previews/employee-landing-mobile.png",
-      "sha256": "3f762c10ccd790d3c3183ac23201a4600668e38b3b8df106411dab0ccb7593dd"
+      "sha256": "3de1d50a11fb4de6cbfb7cc59745c85960890f3b3d0e4ad93333e83a9efc9240"
+    },
+    {
+      "path": "docs/previews/employee-landing-mobile-menu.png",
+      "sha256": "eeeec67939e1bd0bb1526bb68eb04f3ed173d8b46b0e95e4b4c4530b2f1beaf8"
     }
   ]
 }

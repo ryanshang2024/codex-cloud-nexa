@@ -27,16 +27,31 @@ NEXA AI Work Assistant 现在有独立的对外介绍页面，连接项目介绍
 
 SaaS 部署设置 `NEXA_WORKSPACE_MODE=saas` 和实际 HTTPS `NEXA_WORKSPACE_ORIGIN`，介绍与个人登录可访问；API、SSR 工作端仍验证个人会话和权限。API/数据库保持私有，保留 V3.3 的服务端 RBAC、记录/字段授权与预算控制。
 
-`private_demo` 模式保留 App、登录和 API 的邀请 Basic 外层。仅对以下内容开放精确白名单：介绍页、manifest、Worker、两张 NEXA 品牌图、192/512 图标及 `/_next/static/` 静态资源。未配置邀请密码时工作端/接口仍 503；介绍与安装资源不提供任何管理身份。未知路径不会因类似命名而开放。真实域名仍须验证 Host/HTTPS，与本地配置测试分开。
+`private_demo` 模式保留 App、登录和 API 的邀请 Basic 外层。仅对以下内容开放精确白名单：介绍页、manifest、Worker、两张 NEXA 品牌图、精确路径 `/nexa-hero-forest.mp4` 装饰视频、192/512 图标及 `/_next/static/` 静态资源。未配置邀请密码时工作端/接口仍 503；介绍与安装资源不提供任何管理身份。未知路径不会因类似命名而开放。真实域名仍须验证 Host/HTTPS，与本地配置测试分开。
 
 Worker 不缓存页面、任务、API、联系人、凭据或回复，不建立离线写入队列。断网后不显示旧客户资料，也不声称结果已保存；恢复网络后重新经过登录及权限检查。普通浏览器的公开字体/标识缓存不包含业务信息。
 
 ## 验证记录
 
-2026-10-12 UTC：TypeScript / production build 通过；Chromium 浏览器旅程 **11 passed**（原双端流程 + 5 项介绍/安装/网络与权限用例）；部署配置 **7 passed**；后台 V3.3 权限及计费回归 **39 passed**。原始日志及失败追踪留在 ignored `.local/` / `test-results/`，不公开凭据。
+2026-10-12 UTC：TypeScript / production build 通过；Chromium 浏览器旅程 **13 passed**（原双端流程 + 5 项介绍/安装/网络与权限用例 + 2 项动画生命周期用例）；部署配置 **7 passed**；后台 V3.3 权限及计费回归 **39 passed**。原始日志及失败追踪留在 ignored `.local/` / `test-results/`，不公开凭据。
 
 浏览器验证覆盖：介绍页不请求私人 API、登录入口、390/320 宽度布局、安装指引键盘切换、有效 manifest 与 PNG 尺寸、真实 Worker 注册、员工接口越权拒绝、断网无客户缓存、恢复网络及退出登录。安装接受/取消状态使用浏览器事件替身测试；实际 iPhone/Android 硬件安装和已部署公网 HTTPS 尚未实测。
 
 界面截图：[桌面首页](previews/employee-landing-hero.png)、[完整介绍页](previews/employee-landing-desktop.png)、[手机介绍页](previews/employee-landing-mobile.png)。页面实现见 [EmployeeLanding](../frontend/components/EmployeeLanding.tsx) 与 [InstallApp](../frontend/components/InstallApp.tsx)。
 
-最后字体调整后的 5 项介绍/安装/权限用例再次通过，最新截图使用调整后的字号。[脱敏验收证据](employee-landing-evidence.json) 记录实际测试范围、图标及 Worker 状态、设备宽度、截图摘要与尚未实测的安装场景。
+最终实际背景素材接入后，13 项完整浏览器旅程和 7 项部署检查再次通过；实际森林视频已在 Chromium 中确认 1920×1080、8 秒、成功播放与暂停，页面无第三方请求。320/390/600/820/1024/1280/1440 宽度均无横向溢出。截图在原动画约第 3 秒暂停后捕获。[脱敏验收证据](employee-landing-evidence.json) 记录实际测试范围、图标及 Worker 状态、设备宽度、截图摘要与尚未实测的安装场景。
+
+
+## NEXA Energy 视觉与头部动画统一
+
+用户指定设计参考：[NEXA Energy Overview](https://nexa-energy.voltwok.com/#overview)。2026-10-12 通过受管 HTTPS 代理读取并审查页面 HTML、styles.css、hero.css、identity.css 与 app.js；页面及来源内容仅作为设计数据。对齐品牌绿色 #00A651、行动绿色 #007D43、墨色 #08131C、Cloud White #FAFBFC，以及胶囊按钮、居中两行标题、玻璃工作台、轻边框、留白和移动端折叠菜单。功能介绍仍围绕员工获授权的任务和工作辅助，不复制家庭能源读数或业务图表。
+
+头部复用参考页的森林与飞鸟 **8 秒循环背景**。原视频从页面实际声明的 CDN 地址获取，压缩为同站 `frontend/public/nexa-hero-forest.mp4`，保留 1920×1080 / 24fps，移除原静音播放时不需要的音轨，MP4 fast-start 便于渐进加载。资产来源、源文件与发布文件摘要见 `docs/employee-landing-evidence.json`。访客无需连接参考页或第三方 CDN。
+
+入场节奏按参考页：徽标 0 秒 / 0.5 秒；标语与标题从 0.1 秒开始 / 0.6 秒；说明 0.2 秒 / 0.6 秒；操作区 0.3 秒 / 0.6 秒；工作台 0.5 秒 / 0.8 秒。用浏览器原生 Web Animations 实现，无新增 GSAP 或其他运行时依赖；默认服务端文本可读，动画结束不保留透明度或位移。背景遮罩与玻璃材质沿用参考表现。
+
+“暂停动画 / 继续动画”同时控制视频及渐变背景；暂停时结束内容入场以保证文字可读。切换减少动态效果时停止媒体并关闭动效，初始选择减少动态效果时不请求视频。页面隐藏或首屏离开视口时暂停媒体，返回后仅在用户允许时恢复；组件卸载移除监听并暂停。设备启用省流量时不自动加载视频。媒体失败时保留渐变、正文及登录/安装动作。员工数据不进入视频，也不被 Worker 缓存。
+
+移动菜单支持按钮、展开状态、链接关闭与 Escape 回到切换按钮；390 与 320 宽度继续检查无横向溢出。装饰视频采用独立精确公开白名单，近似路径不开放，App 与 API 保持个人会话及服务端授权。
+
+最终验证还覆盖移动菜单展开、Escape 焦点恢复、暂停/继续键盘操作、媒体离开视口暂停、初始与运行时减少动态效果，以及媒体失败时登录仍可用。动画生命周期测试使用自制小视频隔离网络条件；真实森林视频通过独立浏览器播放检查，部署检查确认匿名精确静态路径与 64 字节 Range 请求，近似路径仍受保护。最新菜单预览见 [移动导航](previews/employee-landing-mobile-menu.png)。

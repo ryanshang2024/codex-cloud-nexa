@@ -37,7 +37,14 @@ test('mobile public page and installation steps remain usable without horizontal
  await page.setViewportSize({width:390,height:844});await page.goto('/work-assistant');
  await expect(page.getByRole('heading',{level:1})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+ await page.getByRole('button',{name:'打开导航',exact:true}).click();
+ await expect(page.getByRole('button',{name:'关闭导航',exact:true})).toHaveAttribute('aria-expanded','true');
+ await page.getByRole('navigation').getByRole('link',{name:'产品能力',exact:true}).focus();
+ await page.getByRole('navigation').getByRole('link',{name:'产品能力',exact:true}).press('Escape');
+ await expect(page.getByRole('button',{name:'打开导航',exact:true})).toBeFocused();
+ await page.getByRole('button',{name:'打开导航',exact:true}).click();
  await page.getByRole('navigation').getByRole('link',{name:'下载 App',exact:true}).click();
+ await expect(page.getByRole('button',{name:'打开导航',exact:true})).toHaveAttribute('aria-expanded','false');
  await page.getByRole('tab',{name:'iPhone / iPad',exact:true}).click();
  await expect(page.getByRole('tabpanel')).toContainText('添加到主屏幕');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();

@@ -1,4 +1,6 @@
 import InstallApp from './InstallApp';
+import LandingHero from './LandingHero';
+import LandingHeader from './LandingHeader';
 
 function Arrow(){return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>}
 function Mark({kind}:{kind:'task'|'spark'|'reply'|'report'|'shield'}){
@@ -14,10 +16,26 @@ const features=[
 
 export default function EmployeeLanding(){return <div className="employee-landing">
  <a className="lp-skip" href="#landing-main">跳到项目介绍</a>
- <header className="lp-header"><a className="lp-brand" href="/" aria-label="NEXA AI Work Assistant 首页"><img src="/nexa-logo.png" width="170" height="48" alt="NEXA"/><span>AI WORK ASSISTANT</span></a><nav aria-label="项目介绍导航"><a href="#features">产品能力</a><a href="#journey">使用流程</a><a href="#download">下载 App</a></nav><a className="lp-header-login" href="/login">登录 App <Arrow/></a></header>
+ <LandingHeader/>
  <main id="landing-main" className="lp-main">
-  <section className="lp-hero lp-container" aria-labelledby="hero-title"><div className="lp-hero-copy"><p className="lp-pill"><span/> 企业 AI 工作平台 · Employee App</p><h1 id="hero-title">让每一份工作，<br/><em>清晰向前。</em></h1><p className="lp-lead">从企业分配的任务开始，连接工作信息、<br className="lp-desktop-break"/>客户跟进与个人汇报。你的工作，始终有方向。</p><div className="lp-actions"><a className="lp-button lp-button-primary" href="/login">登录员工工作端 <Arrow/></a><a className="lp-button lp-button-outline" href="#download">安装到我的设备 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg></a></div><p className="lp-hero-note"><Mark kind="shield"/> 企业统一授权 · 个人工作空间 · 结果统一回写</p></div>
-  <figure className="lp-work-visual" aria-label="员工工作流程概览"><div className="lp-visual-glow"/><div className="lp-app-preview"><div className="lp-preview-top"><img src="/nexa-symbol.png" width="26" height="25" alt=""/><strong>NEXA <span>Employee App</span></strong><span className="lp-preview-badge">企业授权</span></div><div className="lp-preview-body"><div className="lp-preview-menu"><span className="active"><Mark kind="task"/>我的任务</span><span><Mark kind="spark"/>工作助手</span><span><Mark kind="report"/>工作汇报</span></div><div className="lp-preview-content"><p className="lp-mini-label">YOUR WORKSPACE</p><h2>工作有方向。<br/>协作有记录。</h2><div className="lp-preview-task"><span className="lp-task-check">1</span><div><strong>接收企业分配的工作</strong><small>任务要求与必要资料，清晰可见</small></div><span className="lp-task-tag">我的任务</span></div><div className="lp-preview-task"><span className="lp-task-check">2</span><div><strong>使用授权助手，推进执行</strong><small>查询信息 · 记录进展 · 整理摘要</small></div></div><div className="lp-preview-progress"><span/><p>工作结果回到统一平台</p><Mark kind="shield"/></div></div></div></div><div className="lp-floating-note"><span><Mark kind="spark"/></span><div><strong>围绕任务，辅助执行。</strong><small>你的信息和能力，来自企业授权。</small></div></div></figure></section>
+  <LandingHero><div className="lp-hero-copy"><p className="lp-pill"><span/> 企业 AI 工作平台 · Employee App</p><p className="lp-hero-eyebrow">INTELLIGENCE. CONNECTED.</p><h1 id="hero-title">让每一份工作，<br/><em>清晰向前。</em></h1><p className="lp-lead">从企业分配的任务开始，连接工作信息、<br className="lp-desktop-break"/>客户跟进与个人汇报。你的工作，始终有方向。</p><div className="lp-actions"><a className="lp-button lp-button-primary" href="/login">登录员工工作端 <Arrow/></a><a className="lp-button lp-button-outline" href="#download">安装到我的设备 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg></a></div><p className="lp-hero-note"><Mark kind="shield"/> 企业统一授权 · 个人工作空间 · 结果统一回写</p></div>
+  <figure className="lp-work-visual" aria-label="员工工作流程概览">
+   <div className="lp-app-preview">
+    <div className="lp-preview-top"><div className="lp-preview-brand"><img src="/nexa-logo.png" width="126" height="36" alt="NEXA"/><span>Employee App</span></div><span className="lp-preview-badge">企业授权 · 个人工作空间</span><span className="lp-preview-profile"><Mark kind="shield"/>我的工作</span></div>
+    <div className="lp-preview-body">
+     <div className="lp-preview-menu"><span className="active"><Mark kind="task"/>我的任务</span><span><Mark kind="spark"/>工作助手</span><span><Mark kind="reply"/>客户跟进</span><span><Mark kind="report"/>工作汇报</span><small>INTELLIGENCE.<br/>CONNECTED.</small></div>
+     <div className="lp-preview-content">
+      <div className="lp-preview-heading"><div><h2>工作有方向。协作有记录。</h2><p>从分配到执行，连接工作的每一步。</p></div><span className="lp-task-tag">按企业授权开放</span></div>
+      <div className="lp-preview-capabilities">{features.map(f=><div key={f.kind}><Mark kind={f.kind}/><span>{f.title}</span><strong>{({task:'任务有分配',spark:'辅助有边界',reply:'进展有记录',report:'协作有依据'})[f.kind]}</strong></div>)}</div>
+      <div className="lp-preview-panels">
+       <div className="lp-preview-work"><p className="lp-mini-label">ONE CONNECTED WORKFLOW</p><div className="lp-preview-task"><span className="lp-task-check">1</span><div><strong>接收企业分配的工作</strong><small>任务要求与必要资料，清晰可见</small></div><Mark kind="task"/></div><div className="lp-preview-task"><span className="lp-task-check">2</span><div><strong>使用授权助手，推进执行</strong><small>查询信息 · 记录进展 · 整理摘要</small></div><Mark kind="spark"/></div><div className="lp-preview-task"><span className="lp-task-check">3</span><div><strong>提交工作结果，连接协作</strong><small>个人记录与工作汇报，回到统一平台</small></div><Mark kind="report"/></div></div>
+       <div className="lp-preview-assistant"><span className="lp-assistant-symbol"><Mark kind="spark"/></span><strong>围绕任务，辅助执行。</strong><p>你的信息和能力，<br/>来自企业授权。</p><span className="lp-assistant-boundary"><Mark kind="shield"/>企业资源，集中管理</span></div>
+      </div>
+      <div className="lp-preview-progress"><span/><p>工作结果回到统一平台</p><Mark kind="shield"/></div>
+     </div>
+    </div>
+   </div>
+  </figure></LandingHero>
   <div className="lp-principles"><div className="lp-container"><span>一套平台，连接团队执行</span><strong>任务有分配</strong><strong>信息有授权</strong><strong>结果有记录</strong></div></div>
   <section id="features" className="lp-section lp-container" aria-labelledby="feature-title"><div className="lp-section-heading"><div><p className="lp-eyebrow">BUILT FOR EVERY WORKDAY</p><h2 id="feature-title">把工作连接起来。<br/><span>把精力留给执行。</span></h2></div><p>无需在零散的信息间来回切换。<br/>在自己的工作空间，推进任务的每一步。</p></div><div className="lp-feature-grid">{features.map(f=><article className="lp-feature-card" key={f.kind}><span className="lp-feature-icon"><Mark kind={f.kind}/></span><h3>{f.title}</h3><strong>{f.subtitle}</strong><p>{f.body}</p></article>)}</div><p className="lp-feature-note">功能按企业授权开放。外部 AI 模型与语音能力由企业接入后启用；工作记录与进度更新可独立使用。</p></section>
   <section id="journey" className="lp-section lp-journey" aria-labelledby="journey-title"><div className="lp-container"><p className="lp-eyebrow">ONE CONNECTED WORKFLOW</p><h2 id="journey-title">从一项任务，到一次推进。</h2><p className="lp-section-intro">四个步骤，让个人执行与企业协作自然连接。</p><ol className="lp-steps">{[['企业开通账号','使用管理员为你创建的个人账号登录。'],['接收分配任务','查看自己的工作要求与明确开放的资料。'],['执行与工作辅助','按授权查询信息、跟进客户、记录进展。'],['结果回到平台','更新任务状态，形成记录与个人工作汇报。']].map(([title,body],i)=><li key={title}><span className="lp-step-number">0{i+1}</span><h3>{title}</h3><p>{body}</p></li>)}</ol></div></section>

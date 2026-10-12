@@ -28,7 +28,7 @@ export function proxy(request:NextRequest) {
  if(mode==='saas')return NextResponse.next();
  // Public product content/install assets contain no identity or customer data.
  const path=request.nextUrl.pathname;
- const publicPage=['/','/work-assistant','/manifest.webmanifest','/work-assistant-sw.js','/nexa-logo.png','/nexa-symbol.png'].includes(path);
+ const publicPage=['/','/work-assistant','/manifest.webmanifest','/work-assistant-sw.js','/nexa-logo.png','/nexa-symbol.png','/nexa-hero-forest.mp4'].includes(path);
  if(publicPage||/^\/app-icons\/(192|512)$/.test(path)||path.startsWith('/_next/static/'))return NextResponse.next();
  if(!user || user.includes(':') || !password)return unavailable();
  const authorization=request.headers.get('authorization') || '';
