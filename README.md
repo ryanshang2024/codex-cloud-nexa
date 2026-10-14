@@ -20,6 +20,8 @@ Admin Console 统一管理 QC/ON、H01–H10、研究、客户资产与 AI 预�
 
 ## 开发环境
 
+macOS 下载后运行：见 [Mac 本地启动及完整流程](docs/macos-local-run.md)。安装 Docker Desktop、Node.js 24、Python 3.12、uv 后，在解压目录执行 `bash START_MAC.command`；停止执行 `bash STOP_MAC.command`。账号密码在自己的电脑首次生成，不包含在下载包中。
+
 已验证 Python 3.12、Node 24、npm 11、Docker 可用。所有命令在现有独立 checkout 中执行，无需 Git worktree。
 
 ```sh

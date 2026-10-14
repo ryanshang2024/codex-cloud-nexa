@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-14",
+  "timezone": "America/Toronto",
+  "scope": "macOS download package and local launcher compatibility",
+  "startup_ownership_tests": {
+    "passed": 8,
+    "failed": 0,
+    "execution_host": "linux",
+    "macos_ps_interface_checked_on_linux": true
+  },
+  "admin_employee_browser_journeys": {
+    "passed": 2,
+    "failed": 0,
+    "execution_host": "linux"
+  },
+  "portable_install_and_production_build": "passed",
+  "repeat_start_on_linux": "passed",
+  "python312_locked_dependency_resolution": {
+    "aarch64-apple-darwin": "dry-run passed",
+    "x86_64-apple-darwin": "dry-run passed",
+    "physical_mac_installation": "unrun"
+  },
+  "next_macos_native_optional_dependencies": [
+    "darwin-arm64",
+    "darwin-x64"
+  ],
+  "postgres_manifest_digest_verified": "sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24",
+  "postgres_linux_amd64_and_arm64_present": true,
+  "credentials_in_download": false,
+  "database_in_download": false,
+  "dependencies_prebundled": false
+}

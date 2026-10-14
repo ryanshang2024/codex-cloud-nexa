@@ -38,14 +38,26 @@ def secure_json(path,value):
 
 def owned_process(pid,name):
     try:
-        cmd=Path(f'/proc/{pid}/cmdline').read_bytes()
-        fields=Path(f'/proc/{pid}/stat').read_text().rsplit(')',1)[1].split()
-        started=int(fields[19])/os.sysconf('SC_CLK_TCK')
-        boot=time.time()-float(Path('/proc/uptime').read_text().split()[0])
+        if sys.platform=='darwin':
+            # macOS has no /proc. Read command and start time from one ps snapshot.
+            snapshot=subprocess.run(['ps','-p',str(pid),'-o','lstart=','-o','command='],
+                capture_output=True,text=True,env={**os.environ,'LC_ALL':'C'})
+            if snapshot.returncode:
+                return False
+            fields=snapshot.stdout.strip().split(None,5)
+            if len(fields)!=6:
+                return False
+            created=time.mktime(time.strptime(' '.join(fields[:5]),'%a %b %d %H:%M:%S %Y'))
+            cmd=fields[5].encode()
+        else:
+            cmd=Path(f'/proc/{pid}/cmdline').read_bytes()
+            fields=Path(f'/proc/{pid}/stat').read_text().rsplit(')',1)[1].split()
+            started=int(fields[19])/os.sysconf('SC_CLK_TCK')
+            created=time.time()-float(Path('/proc/uptime').read_text().split()[0])+started
         # PID reuse cannot pass the timestamp written immediately after our Popen.
         recorded=(LOCAL/(name+'.pid')).stat().st_mtime
         expected={'api':b'backend.app:app','worker':b'backend.jobs','frontend':b'npm run start'}[name]
-        return expected in cmd and os.getpgid(pid)==pid and abs(recorded-boot-started)<5
+        return expected in cmd and os.getpgid(pid)==pid and abs(recorded-created)<5
     except (OSError,ValueError):
         return False
 

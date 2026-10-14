@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Repository-owned, reviewed setup; no external shell installers.
 set -euo pipefail
-cd /workspace/codex-cloud-nexa
+nexa_project_root="$(cd -- "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$nexa_project_root"
 export UV_CACHE_DIR="$PWD/.local/uv-cache"
 export npm_config_cache="$PWD/.local/npm-cache"
 export NEXT_TELEMETRY_DISABLED=1
